@@ -11,7 +11,7 @@
 using namespace std;
 
 
-const string path = "../archivos_deportes"; // los dos puntos es porque el .exe en windows se crea en la caroeta de output, entonces tiene que salir una mas arriba
+const string path = "./archivos_deportes/"; // los dos puntos es porque el .exe en windows se crea en la caroeta de output, entonces tiene que salir una mas arriba
 
 void abrir_archivo();
 void leer_archivo(const string&);
@@ -32,6 +32,7 @@ void abrir_archivo(){
         while(dirent* entry = readdir(pDIR)){
             string fileName = entry->d_name;  
             if(fileName != "." && fileName != ".."){  
+                cout<<fileName<<endl;
                 leer_archivo(fileName);
             }
         }  
@@ -85,10 +86,13 @@ void crear_carpetas(const string& deporte, const string& categoria, const string
 
 void crear_directorio(const string& dirPath ){
     struct stat info;
-    // ver si es que ya hay uno existente o no, si no hay crea uno
     if (stat(dirPath.c_str(), &info) != 0){
-        if (mkdir(dirPath.c_str(), 0700) != 0) {
-            cout << "No se pudo crear el directorio: " << dirPath << endl;
+        #if defined(_WIN32) || defined(_WIN64)
+        if (_mkdir(dirPath.c_str()) != 0) {
+        #else
+        if (mkdir(dirPath.c_str(), 0777) != 0) {
+        #endif
+            cerr << "No se pudo crear el directorio: " << dirPath << endl;
         }
     }
 }
