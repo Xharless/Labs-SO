@@ -26,6 +26,7 @@ int main(){
 
 //string path: la ruta pero en string
 //DIR *direccion: la ruta pero en tipo DIR
+//dirent *elementos: son los elementos dentro de la direccion
 void lista_archivos(){
     string path, nombre_archivo;
     DIR *direccion;
