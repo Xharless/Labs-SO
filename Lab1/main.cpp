@@ -12,30 +12,44 @@ using namespace std;
 
 const string path = "./archivos_deportes/";
 
-void abrir_archivo();
+//Definicion de funciones
+void lista_archivos();
 void leer_archivo(const string&);
 void crear_carpetas(const string&, const string&, const string&, const string&);
 void crear_directorio_recursivo(const string&);
 
+
 int main(){
-    abrir_archivo();
+    lista_archivos();
     return 0;
 }
 
-void abrir_archivo(){
-    if(DIR* pDIR = opendir(path.c_str())){ 
-        cout << "DIRECTORIO ENCONTRADO" << endl;
-        while(dirent* entry = readdir(pDIR)){
-            string fileName = entry->d_name;  
-            if(fileName != "." && fileName != ".."){  
-                cout << "Leyendo archivo: " << fileName << endl;
-                leer_archivo(fileName);
+//string path: la ruta pero en string
+//DIR *direccion: la ruta pero en tipo DIR
+//dirent *elementos: son los elementos dentro de la direccion
+void lista_archivos(){
+    string path, nombre_archivo;
+    DIR *direccion;
+    
+    path = "./archivos_deportes/";
+
+    //verifica que puede abrir el directorio y lee cada archivo dentro de este
+    if(DIR* direccion = opendir(path.c_str())){ 
+        while(dirent *entry = readdir(direccion)){
+            nombre_archivo = entry->d_name;
+
+            //excluye la carpeta actual (.) y la anterior (..) 
+            if(nombre_archivo != "." && nombre_archivo != ".."){  
+                cout << "Leyendo archivo: " << nombre_archivo << endl;
+                //leer_archivo(nombre_archivo);
             }
         }  
-        closedir(pDIR);
+
     } else {
         cout << "NO SE PUEDE ABRIR EL DIRECTORIO" << endl; 
     }
+
+    closedir(direccion);
 }
 
 void leer_archivo(const string& fileName){
