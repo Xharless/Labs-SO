@@ -11,6 +11,7 @@
 using namespace std;
 
 const string path = "./archivos_deportes/";
+//const string path = "/home/cam/Escritorio/archivos_deportes/";
 
 //Definicion de funciones
 void lista_archivos();
@@ -26,12 +27,9 @@ int main(){
 
 //string path: la ruta pero en string
 //DIR *direccion: la ruta pero en tipo DIR
-//dirent *elementos: son los elementos dentro de la direccion
 void lista_archivos(){
-    string path, nombre_archivo;
+    string nombre_archivo;
     DIR *direccion;
-    
-    path = "./archivos_deportes/";
 
     //verifica que puede abrir el directorio y lee cada archivo dentro de este
     if(DIR* direccion = opendir(path.c_str())){ 
@@ -41,7 +39,7 @@ void lista_archivos(){
             //excluye la carpeta actual (.) y la anterior (..) 
             if(nombre_archivo != "." && nombre_archivo != ".."){  
                 cout << "Leyendo archivo: " << nombre_archivo << endl;
-                //leer_archivo(nombre_archivo);
+                leer_archivo(nombre_archivo);
             }
         }  
 
@@ -52,24 +50,31 @@ void lista_archivos(){
     closedir(direccion);
 }
 
-void leer_archivo(const string& fileName){
-    string filePath = path + fileName;
-    ifstream file(filePath);
+void leer_archivo(const string& nombre_archivo){
+    string direccion_archivo = path + nombre_archivo; //a la ruta le agregamos el nombre del archivo
+    ifstream file(direccion_archivo);
+
+    //leemos el archivo
     if (file.is_open() ){
         string deporte, categoria, medalla;
+
+        //obtenemos las 3 lineas del archivo para el nombre de las carpetas
         getline(file, deporte);
         getline(file, categoria);
         getline(file, medalla);
-        file.close();
 
-        cout << "Archivo leído exitosamente: " << fileName << endl;
-        cout << "Deporte: " << deporte << ", Categoría: " << categoria << ", Medalla: " << medalla << endl;
+        cout << "Archivo leído exitosamente: " << nombre_archivo << endl;
+        cout << "Deporte: " << deporte << endl;
+        cout << "Categoría: " << categoria << endl;
+        cout << "Medalla: " << medalla << endl;
 
-        crear_carpetas(deporte, categoria, fileName, medalla);
+        //crear_carpetas(deporte, categoria, nombre_archivo, medalla);
 
     } else {
-        cout << "NO SE PUDO ABRIR EL ARCHIVO: " << filePath << endl;
+        cout << "NO SE PUDO ABRIR EL ARCHIVO: " << direccion_archivo << endl;
     }
+
+    file.close();
 }
 
 void crear_carpetas(const string& deporte, const string& categoria, const string& participante, const string& medalla){
