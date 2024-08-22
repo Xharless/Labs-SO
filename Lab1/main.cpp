@@ -16,7 +16,7 @@ const string path = "./archivos_deportes/";
 //Definicion de funciones
 void lista_archivos();
 void leer_archivo(const string&);
-void crear_carpetas(const string&, const string&, const string&, const string&);
+void mover_archivo(const string&, const string&, const string&, const string&);
 void crear_directorio_recursivo(const string&);
 
 
@@ -68,7 +68,7 @@ void leer_archivo(const string& nombre_archivo){
         cout << "Categoría: " << categoria << endl;
         cout << "Medalla: " << medalla << endl;
 
-        //crear_carpetas(deporte, categoria, nombre_archivo, medalla);
+        mover_archivo(deporte, categoria, nombre_archivo, medalla);
 
     } else {
         cout << "NO SE PUDO ABRIR EL ARCHIVO: " << direccion_archivo << endl;
@@ -77,60 +77,61 @@ void leer_archivo(const string& nombre_archivo){
     file.close();
 }
 
-void crear_carpetas(const string& deporte, const string& categoria, const string& participante, const string& medalla){
-    string baseD = "Carpeta Actual/" + deporte + "/" + categoria;
-    cout << "Creando directorio base: " << baseD << endl;
+void mover_archivo(const string& deporte, const string& categoria, const string& participante, const string& medalla){
+    string directorio_base = "Carpeta Actual/" + deporte + "/" + categoria;
+    cout << "Creando directorio base: " << directorio_base << endl;
 
-    crear_directorio_recursivo(baseD);
+    crear_directorio_recursivo(directorio_base);
 
-    string medallaD;
+    string direccion_medalla;
     if((medalla == "Oro") || (medalla == "Plata") || (medalla == "Bronce")){
-        medallaD = baseD + "/Con Medalla";
-        crear_directorio_recursivo(medallaD);
-        string newfilepath = medallaD + "/" + participante;
-        if (rename((path + participante).c_str(), newfilepath.c_str()) != 0) {
-            cerr << "Error moviendo el archivo: " << participante << " a " << newfilepath << endl;
+        direccion_medalla = directorio_base + "/ConMedalla";
+        crear_directorio_recursivo(direccion_medalla); //crea el directorio de ConMedalla
+
+        string nueva_direccion = direccion_medalla+ "/" + participante;
+        if (rename((path + participante).c_str(), nueva_direccion.c_str()) != 0) { //mueve el archivo al directorio neuvo
+            cerr << "Error moviendo el archivo: " << participante << " a " << nueva_direccion << endl;
         } else {
-            cout << "Archivo movido a: " << newfilepath << endl;
+            cout << "Archivo movido a: " << nueva_direccion << endl;
         }
+
     } else {
-        medallaD = baseD + "/Sin Medalla";
-        crear_directorio_recursivo(medallaD);
-        string newfilepath = medallaD + "/" + participante;
-        if (rename((path + participante).c_str(), newfilepath.c_str()) != 0) {
-            cerr << "Error moviendo el archivo: " << participante << " a " << newfilepath << endl;
+        direccion_medalla = directorio_base + "/SinMedalla";
+        crear_directorio_recursivo(direccion_medalla); //crea el directorio de SinMedalla
+
+        string nueva_direccion = direccion_medalla+ "/" + participante;
+        if (rename((path + participante).c_str(), nueva_direccion.c_str()) != 0) { //mueve el archivo al directorio nuevo
+            cerr << "Error moviendo el archivo: " << participante << " a " << nueva_direccion << endl;
         } else {
-            cout << "Archivo movido a: " << newfilepath << endl;
+            cout << "Archivo movido a: " << nueva_direccion << endl;
         }
     }
 }
 
-void crear_directorio_recursivo(const string& dirPath ){
-    size_t pos = 0;
-    string tempPath = "";
+void crear_directorio_recursivo(const string& ruta_directorio){
+    size_t posicion = 0;
+    string ruta_temporal = "";
     
-    while ((pos = dirPath.find('/', pos)) != string::npos) {
-        tempPath = dirPath.substr(0, pos);
-        if (!tempPath.empty()) {
-            #if defined(_WIN32) || defined(_WIN64)
-            if (_mkdir(tempPath.c_str()) != 0 && errno != EEXIST) {
-            #else
-            if (mkdir(tempPath.c_str(), 0777) != 0 && errno != EEXIST) {
-            #endif
-                cerr << "No se pudo crear el directorio: " << tempPath << endl;
-                return;
+    //buscar cada ocurrencia de / en la ruta del directorio
+    while ((posicion = ruta_directorio.find('/', posicion)) != string::npos) {
+        ruta_temporal = ruta_directorio.substr(0, posicion);
+
+        if (!ruta_temporal.empty()) { //verifica que no este vacio
+            errno = 0; //limpiar errno para evitar confusiones
+
+            if (mkdir(ruta_temporal.c_str(), 0777) != 0 && errno != EEXIST) { //crea el directorio temporal si es que no existe
+                cerr << "No se pudo crear el directorio: " << ruta_temporal << " Error: " << strerror(errno) << endl;
+                return; //detiene la ejecucion
             }
         }
-        pos++;
+
+        posicion++;
     }
 
-    #if defined(_WIN32) || defined(_WIN64)
-    if (_mkdir(dirPath.c_str()) != 0 && errno != EEXIST) {
-    #else
-    if (mkdir(dirPath.c_str(), 0777) != 0 && errno != EEXIST) {
-    #endif
-        cerr << "No se pudo crear el directorio: " << dirPath << endl;
+    errno = 0;
+    if (mkdir(ruta_directorio.c_str(), 0777) != 0 && errno != EEXIST) { //termina de crear el directorio si es que no existe
+        cerr << "No se pudo crear el directorio: " << ruta_directorio << " Error: " << strerror(errno) << endl;
     } else {
-        cout << "Directorio creado: " << dirPath << endl;
+        cout << "Directorio creado: " << ruta_directorio << endl;
     }
 }
