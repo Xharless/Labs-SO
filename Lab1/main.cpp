@@ -10,10 +10,10 @@
 
 using namespace std;
 
+//ruta de la carpeta con los archivos a mover
 const string path = "./archivos_deportes/";
-//const string path = "/home/cam/Escritorio/archivos_deportes/";
 
-//Definicion de funciones
+//definicion de funciones
 void lista_archivos();
 void leer_archivo(const string&);
 void mover_archivo(const string&, const string&, const string&, const string&);
@@ -32,22 +32,21 @@ void lista_archivos(){
     DIR *direccion;
 
     //verifica que puede abrir el directorio y lee cada archivo dentro de este
-    if(DIR* direccion = opendir(path.c_str())){ 
+    if((direccion = opendir(path.c_str())) != nullptr){ 
         while(dirent *entry = readdir(direccion)){
             nombre_archivo = entry->d_name;
 
             //excluye la carpeta actual (.) y la anterior (..) 
             if(nombre_archivo != "." && nombre_archivo != ".."){  
-                cout << "Leyendo archivo: " << nombre_archivo << endl;
                 leer_archivo(nombre_archivo);
             }
-        }  
+        }
+
+        closedir(direccion);
 
     } else {
         cout << "NO SE PUEDE ABRIR EL DIRECTORIO" << endl; 
     }
-
-    closedir(direccion);
 }
 
 void leer_archivo(const string& nombre_archivo){
@@ -63,23 +62,17 @@ void leer_archivo(const string& nombre_archivo){
         getline(file, categoria);
         getline(file, medalla);
 
-        cout << "Archivo leído exitosamente: " << nombre_archivo << endl;
-        cout << "Deporte: " << deporte << endl;
-        cout << "Categoría: " << categoria << endl;
-        cout << "Medalla: " << medalla << endl;
-
         mover_archivo(deporte, categoria, nombre_archivo, medalla);
+
+        file.close();
 
     } else {
         cout << "NO SE PUDO ABRIR EL ARCHIVO: " << direccion_archivo << endl;
     }
-
-    file.close();
 }
 
 void mover_archivo(const string& deporte, const string& categoria, const string& participante, const string& medalla){
     string directorio_base = "Carpeta Actual/" + deporte + "/" + categoria;
-    cout << "Creando directorio base: " << directorio_base << endl;
 
     crear_directorio_recursivo(directorio_base);
 
@@ -91,8 +84,6 @@ void mover_archivo(const string& deporte, const string& categoria, const string&
         string nueva_direccion = direccion_medalla+ "/" + participante;
         if (rename((path + participante).c_str(), nueva_direccion.c_str()) != 0) { //mueve el archivo al directorio neuvo
             cerr << "Error moviendo el archivo: " << participante << " a " << nueva_direccion << endl;
-        } else {
-            cout << "Archivo movido a: " << nueva_direccion << endl;
         }
 
     } else {
@@ -102,8 +93,6 @@ void mover_archivo(const string& deporte, const string& categoria, const string&
         string nueva_direccion = direccion_medalla+ "/" + participante;
         if (rename((path + participante).c_str(), nueva_direccion.c_str()) != 0) { //mueve el archivo al directorio nuevo
             cerr << "Error moviendo el archivo: " << participante << " a " << nueva_direccion << endl;
-        } else {
-            cout << "Archivo movido a: " << nueva_direccion << endl;
         }
     }
 }
@@ -131,7 +120,5 @@ void crear_directorio_recursivo(const string& ruta_directorio){
     errno = 0;
     if (mkdir(ruta_directorio.c_str(), 0777) != 0 && errno != EEXIST) { //termina de crear el directorio si es que no existe
         cerr << "No se pudo crear el directorio: " << ruta_directorio << " Error: " << strerror(errno) << endl;
-    } else {
-        cout << "Directorio creado: " << ruta_directorio << endl;
     }
 }
