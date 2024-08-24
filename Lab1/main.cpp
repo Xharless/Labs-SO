@@ -25,8 +25,19 @@ int main(){
     return 0;
 }
 
-//string path: la ruta pero en string
-//DIR *direccion: la ruta pero en tipo DIR
+/*
+lista_archivos (void): Se abre el directorio (usando path) en el que están los archivos,
+                       para posteriormente leerlos llamando a la función leer_archvivo.
+                       En caso de que no se abra imprime un mensaje por consola.
+
+                       string path: la ruta pero en string.
+                       DIR *direccion: la ruta pero en tipo DIR.
+Parámetros:
+    Sin parámetros.
+
+Retorno:
+    Sin retorno.
+*/
 void lista_archivos(){
     string nombre_archivo;
     DIR *direccion;
@@ -49,6 +60,18 @@ void lista_archivos(){
     }
 }
 
+
+/*
+leer_archivo (void): Se abre el archivo de texto y se obtienen sus tres primeras lineas.
+                     Luego llama a la función mover_archivo.
+                     En caso de que no pueda abrirlo imprime un mensaje por consola.
+
+Parámetros:
+    nombre_archivo (string): nombre del archivo a leer.
+
+Retorno:
+    Sin retorno.
+*/
 void leer_archivo(const string& nombre_archivo){
     string direccion_archivo = path + nombre_archivo; //a la ruta le agregamos el nombre del archivo
     ifstream file(direccion_archivo);
@@ -71,6 +94,22 @@ void leer_archivo(const string& nombre_archivo){
     }
 }
 
+
+/*
+mover_archivo (void): Se llama a la función crear_directorio_recursivo para crear el directorio
+                      base al cual se crearán las carpetas y moveran los archivos, luego comprueba
+                      si obtuvo medalla para crear o mover el archivo según corresponda. En caso de
+                      que no pueda mover el archivo imprimirá un mensaje por consola.
+
+Parámetros:
+    deporte (string): deporte realizado por el participante.
+    categoria (string): categoria del deporte.
+    participante (string): nombre del participante.
+    medalla (string): medalla obtenida por el participante.
+
+Retorno:
+    Sin retorno.
+*/
 void mover_archivo(const string& deporte, const string& categoria, const string& participante, const string& medalla){
     string directorio_base = "Carpeta Actual/" + deporte + "/" + categoria;
 
@@ -97,6 +136,18 @@ void mover_archivo(const string& deporte, const string& categoria, const string&
     }
 }
 
+
+/*
+crear_directorio_recursivo (void): Recorre la ruta_directorio para crear las carpetas que correspondan.
+                                   Utiliza mkdir para hacer la creación, en caso de que no pueda mostrará
+                                   un mensaje por consola.
+
+Parámetros:
+    ruta_directorio (string): la ruta del directorio al cual se crearán las carpetas
+
+Retorno:
+    Retorna nada solo para detener el while si es que no crea el directorio.
+*/
 void crear_directorio_recursivo(const string& ruta_directorio){
     size_t posicion = 0;
     string ruta_temporal = "";
