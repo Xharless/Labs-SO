@@ -17,9 +17,10 @@ vector <carta> crear_mazo(){
     vector<carta> mazo;
     string colores[] = {"Amarillo","Verde","Rojo","Azul"};
     string especiales[] = {"salta", "+2", "cambio_sentido"};
+
     for(const string& color: colores){
         mazo.push_back({color, "0"});
-        for(int i = 0; i<=9; i++){
+        for(int i = 1; i<=9; i++){
             mazo.push_back({color, to_string(i)});
             mazo.push_back({color, to_string(i)});
         }
@@ -33,7 +34,7 @@ vector <carta> crear_mazo(){
     }
 
     for(int i = 0; i<4; i++){
-        mazo.push_back({"negro", "+2"});
+        mazo.push_back({"negro", "comodin"});
         mazo.push_back({"negro", "+4"});
     }
 }
