@@ -93,18 +93,18 @@ Retorno:
     Sin retorno.
 */
 void jugar_turno_persona(juego* estadoJuego){
+    carta cartaPila = estadoJuego->pilaDescarte.back();
+    bool hay_jugable = false;
+
     cout << "Tus cartas son: \n";
     for(size_t i = 0; i<estadoJuego->manos[0].size(); i++){
         //muestra carta en posesión
         cout << i+1 << ": " << estadoJuego->manos[0][i].color << " " << estadoJuego->manos[0][i].tipo << endl;
     }
     
-    cout << "Carta actual de la pila de descarte: " << estadoJuego->pilaDescarte.back().color << " " << estadoJuego->pilaDescarte.back().tipo << endl;
+    cout << "Carta actual de la pila de descarte: " << cartaPila.color << " " << cartaPila.tipo << endl;
 
-    //ver si se puede jugar 
-    carta cartaPila = estadoJuego->pilaDescarte.back();
-    bool hay_jugable = false;
-
+    //ver si se puede jugar
     for(const auto &cartaJugador : estadoJuego->manos[0]){
         if(es_jugable(cartaPila, cartaJugador)){
             hay_jugable = true;
@@ -127,22 +127,26 @@ void jugar_turno_persona(juego* estadoJuego){
                 estadoJuego->manos[0].pop_back();
             } else {
                 cout << "La carta que has robado no es jugable, pasas el turno\n";
+                cout << " " << endl;
             }
 
         } else {
             cout << "El mazo esta vacio. No puedes robar mas cartas\n";
+            cout << " " << endl;
         }
 
     } else {
         int eleccion;
         cout << "Elige una carta para jugar (1-" << estadoJuego->manos[0].size() << "): ";
         cin>>eleccion;
-        if(eleccion>0 && eleccion <= estadoJuego->manos[0].size()){
+
+        if(eleccion>0 && static_cast<vector<carta>::size_type>(eleccion) <= estadoJuego->manos[0].size()){
             carta seleccionada = estadoJuego->manos[0][eleccion -1];
             if(es_jugable(cartaPila, seleccionada)){
                 estadoJuego->pilaDescarte.push_back(seleccionada);
                 estadoJuego->manos[0].erase(estadoJuego->manos[0].begin() + (eleccion - 1));
                 cout << "Has jugado: " << seleccionada.color << " " << seleccionada.tipo << endl;
+                cout << " " << endl;
             } else {
                 cout << "No puedes jugar esa carta, elige una valida\n";
                 jugar_turno_persona(estadoJuego);
@@ -171,13 +175,13 @@ Retorno:
     Sin retorno.
 */
 void jugar_turno_bot(juego* estadoJuego, int num_bot){
-    cout << "Carta actual de la pila de descarte: " << estadoJuego->pilaDescarte.back().color << " " << estadoJuego->pilaDescarte.back().tipo << endl;
-
-    //ver si bot puede jugar carta
     carta cartaPila = estadoJuego->pilaDescarte.back();
     carta jugada;
     bool hay_jugable = false;
 
+    cout << "Carta actual de la pila de descarte: " << cartaPila.color << " " << cartaPila.tipo << endl;
+
+    //ver si bot puede jugar carta
     for(const auto &cartaJugador : estadoJuego->manos[num_bot]){
         if(es_jugable(cartaPila, cartaJugador)){
             hay_jugable = true;
@@ -197,14 +201,18 @@ void jugar_turno_bot(juego* estadoJuego, int num_bot){
             //ver si la robada es jugable
             if(es_jugable(cartaPila, nuevaCarta)){
                 cout << "Bot " << num_bot << " ha robado una carta jugable, se jugara automaticamente" << endl;
+                cout << "Jugo " << jugada.color << " " << jugada.tipo << endl;
+                cout << " " << endl;
                 estadoJuego->pilaDescarte.push_back(nuevaCarta);
                 estadoJuego->manos[num_bot].pop_back();
             } else {
                 cout << "Bot " << num_bot << " ha robado una carta no jugable, pasa de turno" << endl;
+                cout << " " << endl;
             }
 
         } else {
             cout << "El mazo esta vacio. Bot " << num_bot << " no puede robar mas cartas" << endl;
+            cout << " " << endl;
         }
 
     } else {
@@ -213,6 +221,7 @@ void jugar_turno_bot(juego* estadoJuego, int num_bot){
             estadoJuego->manos[num_bot].pop_back();
             estadoJuego->pilaDescarte.push_back(jugada);
             cout << "Bot " << num_bot << " jugo " << jugada.color << " " << jugada.tipo << endl;
+            cout << " " << endl;
         }
     }
 
@@ -289,7 +298,7 @@ int main(){
         }
     }
 
-    // para el proceso padre
+    //para el proceso padre
     while (true){
         if(estadoJuego->turnoActual == 0){
             jugar_turno_persona(estadoJuego);
