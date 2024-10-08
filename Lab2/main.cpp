@@ -1,5 +1,5 @@
 #include <iostream>
-#include <unistd.h> // para el fork y weas
+#include <unistd.h> //para el fork
 #include <sys/wait.h> //para el wait()
 #include <sys/shm.h> //para la memoria compartida 
 #include <vector>
@@ -23,6 +23,17 @@ struct jugador {
     vector <carta> mano;
 };
 
+/*
+crear_mazo (vector<carta>): Siguiendo las reglas del juego se crean las cartas según color y tipo (numero),
+                            además de crear las cartas especiales y las negras, todo esto se agrega en una
+                            "lista" mazo que luego será retornada. 
+
+Parámetros:
+    Sin parámetros.
+
+Retorno:
+    Retorna el mazo creado.
+*/
 vector <carta> crear_mazo(){
     vector<carta> mazo;
     string colores[] = {"Amarillo","Verde","Rojo","Azul"};
@@ -54,20 +65,43 @@ vector <carta> crear_mazo(){
     return mazo;
 }
 
+/*
+es_jugable (bool): Dada la carta de la pila y la carta utilizada por el jugador,
+                   si la carta del jugador coincide con el color de la pila/numero o
+                   es una carta especial (negro) entonces puede jugarla y retorna true.
 
+Parámetros:
+    const carta &cartaPila: carta que está en la pila.
+    const carta &cartaJugador: carta utilizada por el jugador.
+
+Retorno:
+    Retorna true si la carta empleada por el jugador sigue las reglas del juego, de lo
+    contrario false y la carta no se puede jugar.
+*/
 bool es_jugable(const carta &cartaPila, const carta &cartaJugador){
     return cartaJugador.color == cartaPila.color || cartaJugador.tipo == cartaPila.tipo || cartaJugador.color == "Negro";
 }
 
+/*
+jugar_turno_persona (void): Muestra cartas actuales del jugador y le permite jugar en su turno, si la
+                            carta no corresponde a las reglas deberá jugar de nuevo, o robar una carta.
+
+Parámetros:
+    juego* estadoJuego: contieen mazo jugador, pila de descarte, turno actual.
+
+Retorno:
+    Sin retorno.
+*/
 void jugar_turno_persona(juego* estadoJuego){
     cout << "Tus cartas son: \n";
     for(size_t i = 0; i<estadoJuego->manos[0].size(); i++){
+        //muestra carta en posesión
         cout << i+1 << ": " << estadoJuego->manos[0][i].color << " " << estadoJuego->manos[0][i].tipo << endl;
     }
     
     cout << "Carta actual de la pila de descarte: " << estadoJuego->pilaDescarte.back().color << " " << estadoJuego->pilaDescarte.back().tipo << endl;
 
-    // ver si se puede jugar 
+    //ver si se puede jugar 
     carta cartaPila = estadoJuego->pilaDescarte.back();
     bool hay_jugable = false;
 
@@ -97,6 +131,7 @@ void jugar_turno_persona(juego* estadoJuego){
         } else {
             cout << "El mazo esta vacio. No puedes robar mas cartas\n";
         }
+
     } else {
         int eleccion;
         cout << "Elige una carta para jugar (1-" << estadoJuego->manos[0].size() << "): ";
@@ -108,7 +143,7 @@ void jugar_turno_persona(juego* estadoJuego){
                 estadoJuego->manos[0].erase(estadoJuego->manos[0].begin() + (eleccion - 1));
                 cout << "Has jugado: " << seleccionada.color << " " << seleccionada.tipo << endl;
             } else {
-                cout << "No peudes jugar esa carta, elige una valida\n";
+                cout << "No puedes jugar esa carta, elige una valida\n";
                 jugar_turno_persona(estadoJuego);
                 return;
             }
@@ -122,6 +157,15 @@ void jugar_turno_persona(juego* estadoJuego){
     estadoJuego->turnoActual = 1;
 }
 
+/*
+revolver (void): Dado un mazo, cambia la posición de sus cartas.
+
+Parámetros:
+    vector<carta>& mazo: lista de cartas.
+
+Retorno:
+    Sin retorno.
+*/
 void revolver(vector<carta>& mazo){
     srand(time(0));
     for(size_t i = 0; i<mazo.size(); i++){
@@ -131,28 +175,27 @@ void revolver(vector<carta>& mazo){
 }
 
 
-
 int main(){
     int shmID = shmget(IPC_PRIVATE, sizeof(juego), IPC_CREAT | 0666); //para crear la wea del id de memoria compartida
     if(shmID == -1){
-        cerr << "Error añ crear la memoria compartida";
+        cerr << "Error al crear la memoria compartida";
         exit(1);
     }
     
-    // leer y escribir en bloque de memoria, por lo que se adjunta el bloque de memoria del proceso
+    //leer y escribir en bloque de memoria, por lo que se adjunta el bloque de memoria del proceso
     juego *estadoJuego = (juego *)shmat(shmID, NULL, 0);
     if (estadoJuego == (void *)-1){
-        cerr << "Error al adjuntar la caga de memoria compartida"
+        cerr << "Error al adjuntar la caga de memoria compartida";
         exit(1);
     }
 
-    // iniciar el mazo
+    //iniciar el mazo
     estadoJuego->mazo = crear_mazo();
     revolver(estadoJuego->mazo);
-    estadoJuego->manos.resize(4); // para los 4 jugadores
+    estadoJuego->manos.resize(4); //para los 4 jugadores
     estadoJuego->turnoActual = 0;
 
-    //repartir cartas  que son 7 para cada jugador
+    //repartir cartas que son 7 para cada jugador
     for(int i = 0; i<4; ++i){
         for(int j = 0; j<7; ++j){
             estadoJuego->manos[i].push_back(estadoJuego->mazo.back());
@@ -160,13 +203,13 @@ int main(){
         }
     }
 
-
     estadoJuego->pilaDescarte.push_back(estadoJuego->mazo.back());
     estadoJuego->mazo.pop_back();
 
     //crear a los jugadores usando fork
     for(int i = 1; i<=3; ++i){
         pid_t pid = fork();
+
         if(pid==0){
             //codigo del proceso hijo
             while (true){
@@ -183,11 +226,13 @@ int main(){
                 }
             }
             return 0;
+
         } else if (pid < 0){
             cerr << "Error al crear el proceso";
             exit(1);
-        }        
+        }
     }
+
     // para el proceso padre
     while (true){
         if(estadoJuego->turnoActual == 0){
