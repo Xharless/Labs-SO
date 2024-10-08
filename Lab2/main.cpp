@@ -128,6 +128,7 @@ void jugar_turno_persona(juego* estadoJuego){
             } else {
                 cout << "La carta que has robado no es jugable, pasas el turno\n";
             }
+
         } else {
             cout << "El mazo esta vacio. No puedes robar mas cartas\n";
         }
@@ -147,6 +148,7 @@ void jugar_turno_persona(juego* estadoJuego){
                 jugar_turno_persona(estadoJuego);
                 return;
             }
+
         } else {
             cout << "Eleccion invalida, intente otra vez\n";
             jugar_turno_persona(estadoJuego);
@@ -155,6 +157,66 @@ void jugar_turno_persona(juego* estadoJuego){
     }
 
     estadoJuego->turnoActual = 1;
+}
+
+/*
+jugar_turno_bot (void): Permite jugar turno del bot, determina si es necesario robar una carta o no y
+                        juega la primera carta jugable que tenga.
+
+Parámetros:
+    juego* estadoJuego: contieen mazo jugador, pila de descarte, turno actual.
+    int num_bot: numero del bot que está jugando.
+
+Retorno:
+    Sin retorno.
+*/
+void jugar_turno_bot(juego* estadoJuego, int num_bot){
+    cout << "Carta actual de la pila de descarte: " << estadoJuego->pilaDescarte.back().color << " " << estadoJuego->pilaDescarte.back().tipo << endl;
+
+    //ver si bot puede jugar carta
+    carta cartaPila = estadoJuego->pilaDescarte.back();
+    carta jugada;
+    bool hay_jugable = false;
+
+    for(const auto &cartaJugador : estadoJuego->manos[num_bot]){
+        if(es_jugable(cartaPila, cartaJugador)){
+            hay_jugable = true;
+            jugada = cartaJugador; //obtiene la carta que se va a jugar
+            break;
+        }
+    }
+
+    if(!hay_jugable){
+        cout << "Bot " << num_bot << " no tiene carta jugable" << endl;
+        if(!estadoJuego->mazo.empty()){
+            carta nuevaCarta = estadoJuego->mazo.back();
+            estadoJuego->mazo.pop_back();
+            estadoJuego->manos[num_bot].push_back(nuevaCarta);
+            cout << "Bot " << num_bot << " ha robado una carta" << endl;
+
+            //ver si la robada es jugable
+            if(es_jugable(cartaPila, nuevaCarta)){
+                cout << "Bot " << num_bot << " ha robado una carta jugable, se jugara automaticamente" << endl;
+                estadoJuego->pilaDescarte.push_back(nuevaCarta);
+                estadoJuego->manos[num_bot].pop_back();
+            } else {
+                cout << "Bot " << num_bot << " ha robado una carta no jugable, pasa de turno" << endl;
+            }
+
+        } else {
+            cout << "El mazo esta vacio. Bot " << num_bot << " no puede robar mas cartas" << endl;
+        }
+
+    } else {
+        //bot juega la carta que es si o si jugable
+        if(!estadoJuego->manos[num_bot].empty()){
+            estadoJuego->manos[num_bot].pop_back();
+            estadoJuego->pilaDescarte.push_back(jugada);
+            cout << "Bot " << num_bot << " jugo " << jugada.color << " " << jugada.tipo << endl;
+        }
+    }
+
+    estadoJuego->turnoActual = (estadoJuego->turnoActual + 1) % 4;
 }
 
 /*
@@ -214,14 +276,8 @@ int main(){
             //codigo del proceso hijo
             while (true){
                 if(estadoJuego->turnoActual == i){ 
-                    // turno del bot, revisar esta wea 
-                    if(!estadoJuego->manos[i].empty()){
-                        carta jugada = estadoJuego->manos[i].back();
-                        estadoJuego->manos[i].pop_back();
-                        estadoJuego->pilaDescarte.push_back(jugada);
-                        cout << "Bot " << i << " jugo " << jugada.color << " " << jugada.tipo << endl;
-                    }
-                    estadoJuego->turnoActual = (estadoJuego->turnoActual + 1) % 4;
+                    //turno del bot
+                    jugar_turno_bot(estadoJuego, i);
                     sleep(1);
                 }
             }
