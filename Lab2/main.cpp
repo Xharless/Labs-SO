@@ -2,6 +2,7 @@
 #include <unistd.h> //para el fork
 #include <sys/wait.h> //para el wait()
 #include <sys/shm.h> //para la memoria compartida 
+#include <semaphore.h> //para el uso de semaforos
 #include <vector>
 #include <ctime>
 #include <cstdlib>
@@ -18,6 +19,7 @@ struct juego {
     vector<vector<carta>> manos; //4 jugadores
     int turnoActual;
     bool juegoTerminado;
+    sem_t semaforo; //crea semaforo
 };
 
 struct jugador {
@@ -269,7 +271,7 @@ void jugar_turno_persona(juego* estadoJuego){
     if(estadoJuego->manos[0].empty()){
         cout << "Has jugado todas las cartas y ganaste la partida !!" << endl;
         estadoJuego->juegoTerminado = true;
-    } 
+    }
 }
 
 /*
@@ -394,6 +396,7 @@ int main(){
     estadoJuego->manos.resize(4); //para los 4 jugadores
     estadoJuego->turnoActual = 0;
     estadoJuego->juegoTerminado = false;
+    sem_init(&estadoJuego->semaforo, 1, 1); //inicializamos semaforo
 
     //repartir cartas que son 7 para cada jugador
     for(int i = 0; i<4; ++i){
@@ -408,22 +411,31 @@ int main(){
     estadoJuego->mazo.pop_back();
 
     //crear a los jugadores usando fork
-    for(int i = 1; i<=3; ++i){
+    for(int i = 0; i<4; ++i){
         pid_t pid = fork();
 
         if(pid==0){
             //codigo del proceso hijo
+
             while (true){
+                sem_wait(&estadoJuego->semaforo); //bloquea semaforo
+
                 //verificar que el juego ha terminado
                 if(estadoJuego->juegoTerminado){
+                    sem_post(&estadoJuego->semaforo); //libera semaforo al salir
                     break;
                 }
-                
-                //turno del bot
-                if(estadoJuego->turnoActual == i){ 
-                    jugar_turno_bot(estadoJuego, i);
-                    sleep(1);
+                       
+                if(estadoJuego->turnoActual == i){
+                    if(i == 0){
+                        jugar_turno_persona(estadoJuego);
+                    } else {
+                        jugar_turno_bot(estadoJuego,i);
+                    }  
                 }
+                    
+                sem_post(&estadoJuego->semaforo); //libera semaforo
+                sleep(1);
             }
             return 0;
 
@@ -433,25 +445,12 @@ int main(){
         }
     }
 
-    //para el proceso padre
-    while (true){
-        //verificar que el juego ha terminado
-        if(estadoJuego->juegoTerminado){
-            break;
-        }
-        
-        //turno del jugador
-        if(estadoJuego->turnoActual == 0){
-            jugar_turno_persona(estadoJuego);
-            sleep(1);
-        }
-    }
-
-    for(int i = 1; i<=3; ++i){
+    for(int i = 0; i<4; ++i){
         wait(NULL);
     }
 
     //libera la memoria compartida
+    sem_destroy(&estadoJuego->semaforo); //borra semaforo
     shmdt(estadoJuego);
     shmctl(shmID, IPC_RMID, NULL);
 
