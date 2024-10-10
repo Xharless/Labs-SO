@@ -17,6 +17,7 @@ struct juego {
     vector<carta> pilaDescarte;
     vector<vector<carta>> manos; //4 jugadores
     int turnoActual;
+    bool juegoTerminado;
 };
 
 struct jugador {
@@ -83,11 +84,103 @@ bool es_jugable(const carta &cartaPila, const carta &cartaJugador){
 }
 
 /*
+manejar_carta_negras (void): Permite jugar las cartas negras dependiendo de su tipo, se elige color a cambiar y
+                             en caso de que sea +4 hace robar las cartas al siguiente jugador perdiendo su turno,
+                             finalmente borra la carta jugada de la mano y se agrega la nueva a la pila de descarte.
+
+Parámetros:
+    juego* estadoJuego: contiene mazo jugador, pila de descarte, turno actual.
+    int jugadorActual: numero del jugador actual.
+    carta jugada: carta especial jugada. 
+
+Retorno:
+    Sin retorno.
+*/
+void manejar_carta_negras(juego* estadoJuego, int jugadorActual, carta jugada){
+    string nuevo_color;
+    int color_elegido;
+
+    if(jugadorActual == 0){
+        cout << "Has jugado una carta "<< jugada.tipo << ". Elige el nuevo color (1 = Amarilla, 2 = Verde, 3 = Rojo, 4 = Azul): ";
+        cin >> color_elegido;
+
+        switch(color_elegido){
+            case 1: 
+                nuevo_color = "Amarillo";
+                break;
+            case 2:
+                nuevo_color = "Verde";
+                break;
+            case 3: 
+                nuevo_color = "Rojo";
+                break;
+            case 4: 
+                nuevo_color = "Azul";
+                break;
+            default:
+                cout << "Opcion invalida, se eligira el color amarillo por defecto" << endl;
+                nuevo_color = "Amarillo";
+        }
+    } else {
+        //bot "elige" color
+        int color_aleatorio = rand() % 4 + 1;
+        switch(color_aleatorio) {
+            case 1:
+                nuevo_color = "Amarillo";
+                break;
+            case 2:
+                nuevo_color = "Verde";
+                break;
+            case 3:
+                nuevo_color = "Rojo";
+                break;
+            case 4:
+                nuevo_color = "Azul";
+                break;
+        }
+        cout << "Bot " << jugadorActual << " ha cambiado el color a " << nuevo_color << endl;
+    }
+    
+    if(tipo_carta == "+4"){
+        int siguienteJugador = (jugadorActual + 1)%4;
+        cout << "El jugador " << siguienteJugador << " debe robar 4 cartas" << endl;
+    
+        for(int i = 0; i<4; i++){
+            if(!estadoJuego->mazo.empty()){
+                estadoJuego->manos[siguienteJugador].push_back(estadoJuego->mazo.back());
+                estadoJuego->mazo.pop_back();
+            } else {
+                cout << "El mazo esta vacio" << endl;
+                break;
+            }
+        }
+
+        cout << "El jugador " << siguienteJugador << " pierde el turno." << endl;
+        estadoJuego->turnoActual = (estadoJuego->turnoActual + 2)%4;
+
+    } else {
+        //si es tipo comodin sigue el siguiente jugador
+        estadoJuego->turnoActual = (estadoJuego->turnoActual + 1)%4;
+    }
+
+    for(auto it = estadoJuego->manos[jugadorActual].begin(); it != estadoJuego->manos[jugadorActual].end(); ++it){
+        if(it->tipo == jugada.tipo && it->color == "Negro"){
+            estadoJuego->manos[jugadorActual].erase(it);
+            break;
+        }
+    }
+    
+    //da el color que se selecciono a la pila de descarte
+    jugada.color = nuevo_color;
+    estadoJuego->pilaDescarte.push_back(jugada);
+}
+
+/*
 jugar_turno_persona (void): Muestra cartas actuales del jugador y le permite jugar en su turno, si la
                             carta no corresponde a las reglas deberá jugar de nuevo, o robar una carta.
 
 Parámetros:
-    juego* estadoJuego: contieen mazo jugador, pila de descarte, turno actual.
+    juego* estadoJuego: contiene mazo jugador, pila de descarte, turno actual.
 
 Retorno:
     Sin retorno.
@@ -137,16 +230,23 @@ void jugar_turno_persona(juego* estadoJuego){
 
     } else {
         int eleccion;
+        
         cout << "Elige una carta para jugar (1-" << estadoJuego->manos[0].size() << "): ";
         cin>>eleccion;
 
         if(eleccion>0 && static_cast<vector<carta>::size_type>(eleccion) <= estadoJuego->manos[0].size()){
             carta seleccionada = estadoJuego->manos[0][eleccion -1];
             if(es_jugable(cartaPila, seleccionada)){
-                estadoJuego->pilaDescarte.push_back(seleccionada);
-                estadoJuego->manos[0].erase(estadoJuego->manos[0].begin() + (eleccion - 1));
-                cout << "Has jugado: " << seleccionada.color << " " << seleccionada.tipo << endl;
-                cout << " " << endl;
+                
+                if(seleccionada.color == "Negro"){
+                    manejar_carta_negras(estadoJuego,0,seleccionada);
+                } else {
+                    estadoJuego->pilaDescarte.push_back(seleccionada); //carta jugada a la pila de descarte
+                    estadoJuego->manos[0].erase(estadoJuego->manos[0].begin() + (eleccion - 1)); //se borra la carta del mazo del jugador
+                    cout << "Has jugado: " << seleccionada.color << " " << seleccionada.tipo << endl;
+                    cout << " " << endl;    
+                }
+                
             } else {
                 cout << "No puedes jugar esa carta, elige una valida\n";
                 jugar_turno_persona(estadoJuego);
@@ -159,8 +259,15 @@ void jugar_turno_persona(juego* estadoJuego){
             return;
         }
     }
+    
+    //jugador gana si su mano esta vacia
+    if(estadoJuego->manos[0].empty()){
+        cout << "Has jugado todas las cartas y ganaste la partida !!" << endl;
+        estadoJuego->juegoTerminado = true;
 
-    estadoJuego->turnoActual = 1;
+    } else {
+        estadoJuego->turnoActual = 1;    
+    }    
 }
 
 /*
@@ -168,7 +275,7 @@ jugar_turno_bot (void): Permite jugar turno del bot, determina si es necesario r
                         juega la primera carta jugable que tenga.
 
 Parámetros:
-    juego* estadoJuego: contieen mazo jugador, pila de descarte, turno actual.
+    juego* estadoJuego: contiene mazo jugador, pila de descarte, turno actual.
     int num_bot: numero del bot que está jugando.
 
 Retorno:
@@ -201,7 +308,7 @@ void jugar_turno_bot(juego* estadoJuego, int num_bot){
             //ver si la robada es jugable
             if(es_jugable(cartaPila, nuevaCarta)){
                 cout << "Bot " << num_bot << " ha robado una carta jugable, se jugara automaticamente" << endl;
-                cout << "Jugo " << jugada.color << " " << jugada.tipo << endl;
+                cout << "Jugo " << nuevaCarta.color << " " << nuevaCarta.tipo << endl;
                 cout << " " << endl;
                 estadoJuego->pilaDescarte.push_back(nuevaCarta);
                 estadoJuego->manos[num_bot].pop_back();
@@ -216,16 +323,23 @@ void jugar_turno_bot(juego* estadoJuego, int num_bot){
         }
 
     } else {
-        //bot juega la carta que es si o si jugable
-        if(!estadoJuego->manos[num_bot].empty()){
-            estadoJuego->manos[num_bot].pop_back();
-            estadoJuego->pilaDescarte.push_back(jugada);
+        if(jugada.color == "Negro"){
+            manejar_carta_negras(estadoJuego,num_bot,jugada);
+        } else {
+            estadoJuego->pilaDescarte.push_back(jugada); //carta jugada a la pila de descarte
+            estadoJuego->manos[num_bot].pop_back(); //se borra la carta del mazo del bot 
             cout << "Bot " << num_bot << " jugo " << jugada.color << " " << jugada.tipo << endl;
-            cout << " " << endl;
         }
     }
+    
+    //bot gana la partida al tener su mano vacia
+    if(estadoJuego->manos[num_bot].empty()){
+        cout << "Bot " << num_bot << " jugo todas las cartas y gano la partida" << endl;
+        estadoJuego->juegoTerminado = true;
 
-    estadoJuego->turnoActual = (estadoJuego->turnoActual + 1) % 4;
+    } else {
+        estadoJuego->turnoActual = (estadoJuego->turnoActual + 1) % 4;   
+    }
 }
 
 /*
@@ -247,7 +361,7 @@ void revolver(vector<carta>& mazo){
 
 
 int main(){
-    int shmID = shmget(IPC_PRIVATE, sizeof(juego), IPC_CREAT | 0666); //para crear la wea del id de memoria compartida
+    int shmID = shmget(IPC_PRIVATE, sizeof(juego), IPC_CREAT | 0666); //para crear id de memoria compartida
     if(shmID == -1){
         cerr << "Error al crear la memoria compartida";
         exit(1);
@@ -265,6 +379,7 @@ int main(){
     revolver(estadoJuego->mazo);
     estadoJuego->manos.resize(4); //para los 4 jugadores
     estadoJuego->turnoActual = 0;
+    estadoJuego->juegoTerminado = false;
 
     //repartir cartas que son 7 para cada jugador
     for(int i = 0; i<4; ++i){
@@ -274,6 +389,7 @@ int main(){
         }
     }
 
+    //agregamos la primera carta a jugar a la pila de descarte
     estadoJuego->pilaDescarte.push_back(estadoJuego->mazo.back());
     estadoJuego->mazo.pop_back();
 
@@ -284,8 +400,13 @@ int main(){
         if(pid==0){
             //codigo del proceso hijo
             while (true){
+                //verificar que el juego ha terminado
+                if(estadoJuego->juegoTerminado){
+                    break;
+                }
+                
+                //turno del bot
                 if(estadoJuego->turnoActual == i){ 
-                    //turno del bot
                     jugar_turno_bot(estadoJuego, i);
                     sleep(1);
                 }
@@ -300,6 +421,12 @@ int main(){
 
     //para el proceso padre
     while (true){
+        //verificar que el juego ha terminado
+        if(estadoJuego->juegoTerminado){
+            break;
+        }
+        
+        //turno del jugador
         if(estadoJuego->turnoActual == 0){
             jugar_turno_persona(estadoJuego);
             sleep(1);
@@ -309,18 +436,10 @@ int main(){
     for(int i = 1; i<=3; ++i){
         wait(NULL);
     }
+
+    //libera la memoria compartida
     shmdt(estadoJuego);
     shmctl(shmID, IPC_RMID, NULL);
-
-    /* muestra el mazo revuelto
-    
-    vector<carta> mazo = crear_mazo();
-    revolver(mazo);
-
-    for(const auto& c:mazo){
-        cout << c.color << " " << c.tipo << endl;
-    }
-    */
 
     return 0;
 }
