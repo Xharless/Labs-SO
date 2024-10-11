@@ -241,7 +241,7 @@ void jugar_turno_persona(juego* estadoJuego){
         cin>>eleccion;
 
         if(eleccion>0 && static_cast<vector<carta>::size_type>(eleccion) <= estadoJuego->manos[0].size()){
-            carta seleccionada = estadoJuego->manos[0][eleccion -1];
+            carta seleccionada = estadoJuego->manos[0][eleccion - 1];
             if(es_jugable(cartaPila, seleccionada)){
                 cout << "Has jugado: " << seleccionada.color << " " << seleccionada.tipo << endl;
                 cout << " " << endl;  
@@ -421,11 +421,11 @@ int main(){
             //codigo del proceso hijo
 
             while (true){
-                //bloquea semaforo
+                sem_wait(&estadoJuego->semaforo);//bloquea semaforo
 
                 //verificar que el juego ha terminado
                 if(estadoJuego->juegoTerminado){
-                    //libera semaforo al salir
+                    sem_post(&estadoJuego->semaforo);//libera semaforo al salir
                     break;
                 }
                 if(estadoJuego->turnoActual == i){
@@ -435,8 +435,7 @@ int main(){
                         jugar_turno_bot(estadoJuego,i);
                     }  
                 }
-                    
-                //libera semaforo
+                sem_post(&estadoJuego->semaforo);//libera semaforo
                 sleep(1);
             }
             return 0;
