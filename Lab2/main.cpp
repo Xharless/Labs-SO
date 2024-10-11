@@ -142,11 +142,13 @@ void manejar_carta_negras(juego* estadoJuego, int jugadorActual, carta jugada){
                 break;
         }
         cout << "Bot " << jugadorActual << " ha cambiado el color a " << nuevo_color << endl;
+        cout << " " << endl;
     }
 
     if(jugada.tipo == "+4"){
         int siguienteJugador = (jugadorActual + 1)%4;
         cout << "El jugador " << siguienteJugador << " debe robar 4 cartas" << endl;
+        cout << " " << endl;
     
         for(int i = 0; i<4; i++){
             if(!estadoJuego->mazo.empty()){
@@ -154,11 +156,13 @@ void manejar_carta_negras(juego* estadoJuego, int jugadorActual, carta jugada){
                 estadoJuego->mazo.pop_back();
             } else {
                 cout << "El mazo está vacío" << endl;
+                cout << " " << endl;
                 break;
             }
         }
 
         cout << "El jugador " << siguienteJugador << " pierde el turno." << endl;
+        cout << " " << endl;
         estadoJuego->turnoActual = (estadoJuego->turnoActual + 2)%4;
 
     } else {
@@ -191,10 +195,12 @@ void manejar_carta_especial(juego* estadoJuego, carta cartaEspecial, int jugador
 
     if (cartaEspecial.tipo == "salta") {
         cout << "El jugador " << siguienteJugador << " ha sido saltado." << endl;
+        cout << " " << endl;
         estadoJuego->turnoActual = (estadoJuego->turnoActual + 2) % 4;  //salta el siguiente jugador
 
     } else if (cartaEspecial.tipo == "+2") {
         cout << "El jugador " << siguienteJugador << " debe robar 2 cartas." << endl;
+        cout << " " << endl;
         
         //agregar dos cartas del mazo a la mano del jugador correspondiente
         for (int i = 0; i < 2; i++) {
@@ -203,15 +209,21 @@ void manejar_carta_especial(juego* estadoJuego, carta cartaEspecial, int jugador
                 estadoJuego->mazo.pop_back();
             } else {
                 cout << "El mazo está vacío." << endl;
+                cout << " " << endl;
                 break;
             }
         }
+
         estadoJuego->turnoActual = siguienteJugador;
 
     } else if (cartaEspecial.tipo == "cambio_sentido") {
         cout << "La dirección del juego ha cambiado." << endl;
+        cout << " " << endl;
         estadoJuego->direccionTurno *= -1;  //cambia la dirección del juego
+        estadoJuego->turnoActual = siguienteJugador;
     }
+
+    estadoJuego->pilaDescarte.push_back(cartaEspecial);
 }
 
 /*
@@ -271,11 +283,13 @@ void jugar_turno_persona(juego* estadoJuego) {
 
             } else {
                 cout << "La carta que has robado no es jugable, pasas el turno\n";
+                cout << " " << endl;
                 estadoJuego->turnoActual = 1;
             }
 
         } else {
             cout << "El mazo está vacío. No puedes robar más cartas\n";
+            cout << " " << endl;
             estadoJuego->turnoActual = 1;
         }
 
@@ -291,6 +305,7 @@ void jugar_turno_persona(juego* estadoJuego) {
 
             if (es_jugable(cartaPila, seleccionada)) {
                 cout << "Has jugado: " << seleccionada.color << " " << seleccionada.tipo << endl;
+                cout << " " << endl;
 
                 if (seleccionada.color == "Negro") {
                     manejar_carta_negras(estadoJuego, 0, seleccionada);
@@ -307,12 +322,14 @@ void jugar_turno_persona(juego* estadoJuego) {
 
             } else {
                 cout << "No puedes jugar esa carta, elige una válida\n";
+                cout << " " << endl;
                 jugar_turno_persona(estadoJuego);
                 return;
             }
 
         } else {
             cout << "Elección inválida, intenta otra vez\n";
+            cout << " " << endl;
             jugar_turno_persona(estadoJuego);
             return;
         }
@@ -321,6 +338,12 @@ void jugar_turno_persona(juego* estadoJuego) {
     //verifica si el jugador ha ganado
     if (estadoJuego->manos[0].empty()) {
         cout << "Has jugado todas las cartas y ganaste la partida !!" << endl;
+
+        //mostrar las cartas restantes de los demás jugadores
+        for(int i=1; i < 4; i++){
+            cout << "Jugador " << i << " quedó con " << estadoJuego->manos[i].size() << " cartas\n";
+        }
+
         estadoJuego->juegoTerminado = true;
     }
 }
@@ -369,6 +392,7 @@ void jugar_turno_bot(juego* estadoJuego) {
             if (es_jugable(cartaPila, nuevaCarta)) {
                 cout << "Bot " << num_bot << " ha robado una carta jugable, se jugará automáticamente\n";
                 cout << "Bot jugó " << nuevaCarta.color << " " << nuevaCarta.tipo << endl;
+                cout << " " << endl;
 
                 if (nuevaCarta.color == "Negro") {
                     manejar_carta_negras(estadoJuego, num_bot, nuevaCarta);  //juega la carta negra
@@ -383,17 +407,20 @@ void jugar_turno_bot(juego* estadoJuego) {
 
             } else {
                 cout << "Bot " << num_bot << " ha robado una carta no jugable, pasa de turno\n";
+                cout << " " << endl;
                 estadoJuego->turnoActual = (estadoJuego->turnoActual + 1) % 4;
             }
 
         } else {
             cout << "El mazo está vacío. Bot " << num_bot << " no puede robar más cartas\n";
+            cout << " " << endl;
             estadoJuego->turnoActual = (estadoJuego->turnoActual + 1) % 4;
         }
 
     //si hay jugable
     } else {
         cout << "Bot " << num_bot << " jugó " << jugada.color << " " << jugada.tipo << endl;
+        cout << " " << endl;
 
         if (jugada.color == "Negro") {
             manejar_carta_negras(estadoJuego, num_bot, jugada);  //juega la carta negra
@@ -410,6 +437,14 @@ void jugar_turno_bot(juego* estadoJuego) {
     //verificar si el bot ha ganado
     if (estadoJuego->manos[num_bot].empty()) {
         cout << "Bot " << num_bot << " jugó todas las cartas y ganó la partida!\n";
+
+        //mostrar las cartas restantes de los demás jugadores
+        for(int i=0; i < 4; i++){
+            if(num_bot != i){
+                cout << "Jugador " << i << " quedó con " << estadoJuego->manos[i].size() << " cartas\n";
+            }
+        }
+
         estadoJuego->juegoTerminado = true;
     }
 }
