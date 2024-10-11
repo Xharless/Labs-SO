@@ -143,6 +143,8 @@ void manejar_carta_negras(juego* estadoJuego, int jugadorActual, carta jugada){
         cout << "Bot " << jugadorActual << " ha cambiado el color a " << nuevo_color << endl;
     }
     
+    sem_wait(&estadoJuego->semaforo);
+
     if(jugada.tipo == "+4"){
         int siguienteJugador = (jugadorActual + 1)%4;
         cout << "El jugador " << siguienteJugador << " debe robar 4 cartas" << endl;
@@ -165,7 +167,6 @@ void manejar_carta_negras(juego* estadoJuego, int jugadorActual, carta jugada){
         estadoJuego->turnoActual = (estadoJuego->turnoActual + 1)%4;
     }
 
-    sem_wait(&estadoJuego->semaforo);
     //da el color que se selecciono a la pila de descarte
     jugada.color = nuevo_color;
     estadoJuego->pilaDescarte.push_back(jugada);
