@@ -184,6 +184,7 @@ Retorno:
     Sin retorno.
 */
 void jugar_turno_persona(juego* estadoJuego){
+    sem_wait(&estadoJuego->semaforo)
     carta cartaPila = estadoJuego->pilaDescarte.back();
     bool hay_jugable = false;
 
@@ -219,9 +220,9 @@ void jugar_turno_persona(juego* estadoJuego){
                     manejar_carta_negras(estadoJuego,0,nuevaCarta);
                 } else{
                     estadoJuego->pilaDescarte.push_back(nuevaCarta);
+                    estadoJuego->turnoActual = 1; //siguiente turno
                 }
                 estadoJuego->manos[0].pop_back();
-                estadoJuego->turnoActual = 1; //siguiente turno
 
             } else {
                 cout << "La carta que has robado no es jugable, pasas el turno\n";
@@ -251,9 +252,9 @@ void jugar_turno_persona(juego* estadoJuego){
                     manejar_carta_negras(estadoJuego,0,seleccionada);
                 } else {
                     estadoJuego->pilaDescarte.push_back(seleccionada); //carta jugada a la pila de descarte
+                    estadoJuego->turnoActual = 1; //siguiente turno  
                 }
                 estadoJuego->manos[0].erase(estadoJuego->manos[0].begin() + (eleccion - 1)); //se borra la carta del mazo del jugador
-                estadoJuego->turnoActual = 1; //siguiente turno  
             } else {
                 cout << "No puedes jugar esa carta, elige una valida\n";
                 sem_post(&estadoJuego->semaforo);
@@ -324,10 +325,10 @@ void jugar_turno_bot(juego* estadoJuego, int num_bot) {
                     manejar_carta_negras(estadoJuego, num_bot, nuevaCarta);  // Maneja la carta negra
                 } else {
                     estadoJuego->pilaDescarte.push_back(nuevaCarta);  // Agregar la carta a la pila de descarte
+                    estadoJuego->turnoActual = (estadoJuego->turnoActual + 1) % 4;  // Cambiar al siguiente turno
                 }
 
                 estadoJuego->manos[num_bot].pop_back();  // Eliminar la carta de la mano del bot
-                estadoJuego->turnoActual = (estadoJuego->turnoActual + 1) % 4;  // Cambiar al siguiente turno
 
             } else {
                 cout << "Bot " << num_bot << " ha robado una carta no jugable, pasa de turno\n";
@@ -346,10 +347,10 @@ void jugar_turno_bot(juego* estadoJuego, int num_bot) {
             manejar_carta_negras(estadoJuego, num_bot, jugada);  // Maneja la carta negra
         } else {
             estadoJuego->pilaDescarte.push_back(jugada);  // Agregar la carta jugada a la pila de descarte
+            estadoJuego->turnoActual = (estadoJuego->turnoActual + 1) % 4;  // Cambiar al siguiente turno
         }
 
         estadoJuego->manos[num_bot].erase(estadoJuego->manos[num_bot].begin() + posicion);  // Eliminar la carta de la mano del bot
-        estadoJuego->turnoActual = (estadoJuego->turnoActual + 1) % 4;  // Cambiar al siguiente turno
     }
 
     // Verificar si el bot ha ganado
