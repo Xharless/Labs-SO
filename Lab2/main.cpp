@@ -103,7 +103,7 @@ void manejar_carta_negras(juego* estadoJuego, int jugadorActual, carta jugada){
     int color_elegido;
 
     if(jugadorActual == 0){
-        cout << "Has jugado una carta "<< jugada.tipo << ". Elige el nuevo color (1 = Amarilla, 2 = Verde, 3 = Rojo, 4 = Azul): ";
+        cout << "Has jugado una carta "<< jugada.tipo << ". Elige el nuevo color (1 = Amarillo, 2 = Verde, 3 = Rojo, 4 = Azul): ";
         cin >> color_elegido;
 
         switch(color_elegido){
@@ -142,7 +142,7 @@ void manejar_carta_negras(juego* estadoJuego, int jugadorActual, carta jugada){
         }
         cout << "Bot " << jugadorActual << " ha cambiado el color a " << nuevo_color << endl;
     }
-    
+
     if(jugada.tipo == "+4"){
         int siguienteJugador = (jugadorActual + 1)%4;
         cout << "El jugador " << siguienteJugador << " debe robar 4 cartas" << endl;
@@ -165,11 +165,10 @@ void manejar_carta_negras(juego* estadoJuego, int jugadorActual, carta jugada){
         estadoJuego->turnoActual = (estadoJuego->turnoActual + 1)%4;
     }
 
-    sem_wait(&estadoJuego->semaforo);
+    
     //da el color que se selecciono a la pila de descarte
     jugada.color = nuevo_color;
     estadoJuego->pilaDescarte.push_back(jugada);
-    sem_post(&estadoJuego->semaforo);
 }
 
 /*
@@ -183,6 +182,7 @@ Retorno:
     Sin retorno.
 */
 void jugar_turno_persona(juego* estadoJuego){
+    sem_wait(&estadoJuego->semaforo);
     carta cartaPila = estadoJuego->pilaDescarte.back();
     bool hay_jugable = false;
 
@@ -421,11 +421,11 @@ int main(){
             //codigo del proceso hijo
 
             while (true){
-                sem_wait(&estadoJuego->semaforo); //bloquea semaforo
+                //bloquea semaforo
 
                 //verificar que el juego ha terminado
                 if(estadoJuego->juegoTerminado){
-                    sem_post(&estadoJuego->semaforo); //libera semaforo al salir
+                    //libera semaforo al salir
                     break;
                 }
                 if(estadoJuego->turnoActual == i){
@@ -436,7 +436,7 @@ int main(){
                     }  
                 }
                     
-                sem_post(&estadoJuego->semaforo); //libera semaforo
+                //libera semaforo
                 sleep(1);
             }
             return 0;
