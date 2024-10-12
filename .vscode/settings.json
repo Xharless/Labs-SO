@@ -4,6 +4,10 @@
         "ostream": "cpp",
         "iostream": "cpp",
         "vector": "cpp",
-        "semaphore": "cpp"
+        "semaphore": "cpp",
+        "array": "cpp",
+        "string_view": "cpp",
+        "initializer_list": "cpp",
+        "utility": "cpp"
     }
 }
