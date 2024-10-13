@@ -594,17 +594,18 @@ int main(){
                 sem_wait(&estadoJuego->semaforo); //bloquea semaforo
                 
                 cout << getpid() << endl;
-                if(estadoJuego->turnoActual == 0){
-                    jugar_turno_persona(estadoJuego);
-                } else {
-                    jugar_turno_bot(estadoJuego);
+                if(estadoJuego->turnoActual == i){
+                    if(i==0){
+                        jugar_turno_persona(estadoJuego);
+                    } else {
+                        jugar_turno_bot(estadoJuego);
+                    }
                 }
 
-                sleep(1);
                 sem_post(&estadoJuego->semaforo); //libera semaforo
+                sleep(1);
             }
             exit(0);
-
 
         } else if (pid < 0){
             cerr << "Error al crear el proceso";
