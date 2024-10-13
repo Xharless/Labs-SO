@@ -408,7 +408,6 @@ void jugar_turno_persona(juego* estadoJuego) {
 
         estadoJuego->juegoTerminado = true;
     }
-    
     sem_post(&estadoJuego->semaforo); //libera semaforo
 }
 
@@ -518,7 +517,6 @@ void jugar_turno_bot(juego* estadoJuego) {
 
         estadoJuego->juegoTerminado = true;
     }
-
     sem_post(&estadoJuego->semaforo); //libera semaforo
 }
 
@@ -580,6 +578,8 @@ int main(){
         exit(1);
     }
 
+    pid_t pid;
+
     //iniciar el juego 
     crear_mazo(estadoJuego);
     revolver(estadoJuego->mazo, estadoJuego->mazo_size);
@@ -590,26 +590,41 @@ int main(){
     estadoJuego->juegoTerminado = false;
     sem_init(&estadoJuego->semaforo, 1, 1); //inicializamos semaforo
     
-    //crear a los jugadores usando fork
-    for(int i = 0; i<4; ++i){
-        pid_t pid = fork();
+    //crear jugador humano
+    pid = fork();
+
+    if(pid==0){
+        while (!estadoJuego->juegoTerminado){
+            sem_wait(&estadoJuego->semaforo); //bloquea semaforo
+                
+            cout << getpid() << endl;
+            if(estadoJuego->turnoActual == 0){
+                jugar_turno_persona(estadoJuego);
+                sleep(1);
+            }
+        }
+        exit(0);
+        
+    } else if (pid < 0){
+            cerr << "Error al crear el proceso";
+            exit(1);
+    }
+
+    //crear a los bots
+    for(int i = 0; i<3; i++){
+        pid = fork();
 
         if(pid==0){
-            
             while (!estadoJuego->juegoTerminado){
                 sem_wait(&estadoJuego->semaforo); //bloquea semaforo
                 
                 cout << getpid() << endl;
-                if(estadoJuego->turnoActual == 0){
-                    jugar_turno_persona(estadoJuego);
-                } else {
+                if(estadoJuego->turnoActual != 0){
                     jugar_turno_bot(estadoJuego);
+                    sleep(1);
                 }
-
-                sleep(1);
             }
             exit(0);
-
 
         } else if (pid < 0){
             cerr << "Error al crear el proceso";
