@@ -15,6 +15,7 @@ Detalles de uso del programa:
 	- Si el jugador no tiene una carta para jugar, este mismo sacaráa una carta del mazo, donde si la carta sirve se jugará automáticamente, de lo contrario
 	se pasará el turno.
 	- Las cartas especiales que son de tener que robar cartas, hacen que se salte el turno del jugador que debe robar cartas.
+	- Cuando se gana, se muestra la cantidad de cartas de los otros jugadores.
 	
 Consideraciones:
 	- Se considera que está ejecutando el programa en un sistema Linux.
