@@ -604,7 +604,7 @@ int main(){
             }
         }
         exit(0);
-        
+
     } else if (pid < 0){
             cerr << "Error al crear el proceso";
             exit(1);
