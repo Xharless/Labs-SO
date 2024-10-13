@@ -29,22 +29,22 @@ struct juego {
 };
 
 /*
-crear_mazo (vector<carta>): Siguiendo las reglas del juego se crean las cartas según color y tipo (numero),
-                            además de crear las cartas especiales y las negras, todo esto se agrega en una
-                            "lista" mazo que luego será retornada. 
+crear_mazo (void): Siguiendo las reglas del juego se crean las cartas según color y tipo (numero),
+                   además de crear las cartas especiales y las negras, todo esto se agrega en una
+                   "lista" mazo. 
 
 Parámetros:
-    Sin parámetros.
+    juego* estadoJuego: contiene todo lo relacionado al juego.
 
 Retorno:
-    Retorna el mazo creado.
+    Sin retorno.
 */
 void crear_mazo(juego* estadoJuego) {
     string colores[] = {"Amarillo", "Verde", "Rojo", "Azul"};
     string especiales[] = {"salta", "+2", "cambio_sentido"};
     estadoJuego->mazo_size = 0;  
 
-    // Crear cartas numéricas
+    //crear cartas numéricas
     for (const string& color : colores) {
         carta nuevaCarta;
         nuevaCarta.color = color;
@@ -61,7 +61,7 @@ void crear_mazo(juego* estadoJuego) {
         }
     }
 
-    // Crear cartas especiales por cada color
+    //crear cartas especiales por cada color
     for (const string& color : colores) {
         for (const string& especial : especiales) {
             carta cartaEspecial;
@@ -73,7 +73,7 @@ void crear_mazo(juego* estadoJuego) {
         }
     }
 
-    // Crear cartas negras que son el comodín y el +4
+    //crear cartas negras que son el comodín y el +4
     for (int i = 0; i < 4; i++) {
         if (estadoJuego->mazo_size < 108) {
             carta cartaComodin;
@@ -89,7 +89,18 @@ void crear_mazo(juego* estadoJuego) {
     }
 }
 
+/*
+turno_siguiente (void): Siguiendo las reglas del juego se crean las cartas según color y tipo (numero),
+                        además de crear las cartas especiales y las negras, todo esto se agrega en una
+                        "lista" mazo. 
 
+Parámetros:
+    juego* estadoJuego: contiene todo lo relacionado al juego.
+    int salta: cantidad de saltos que hará para el turno.
+
+Retorno:
+    Sin retorno.
+*/
 void turno_siguiente(juego* estadoJuego, int salta){
     //turno normal salta=1, carta especial salta=2
 
@@ -126,7 +137,7 @@ manejar_carta_negras (void): Permite jugar las cartas negras dependiendo de su t
                             finalmente borra la carta jugada de la mano y se agrega la nueva a la pila de descarte.
 
 Parámetros:
-    juego* estadoJuego: contiene mazo jugador, pila de descarte, turno actual.
+    juego* estadoJuego: contiene todo lo relacionado al juego.
     int jugadorActual: numero del jugador actual.
     carta jugada: carta especial jugada. 
 
@@ -220,14 +231,13 @@ manejar_carta_especial (void): Permite jugar las cartas especiales (salta, +2 y 
                             cambio sentido voltea los turnos.
 
 Parámetros:
-    juego* estadoJuego: contiene mazo jugador, pila de descarte, turno actual.
-    int jugadorActual: numero del jugador actual.
+    juego* estadoJuego: contiene todo lo relacionado al juego.
     carta cartaEspecial: carta especial jugada. 
 
 Retorno:
     Sin retorno.
 */
-void manejar_carta_especial(juego* estadoJuego, carta cartaEspecial, int jugadorActual) {
+void manejar_carta_especial(juego* estadoJuego, carta cartaEspecial) {
     int siguienteJugador = (estadoJuego->turnoActual + estadoJuego->direccionTurno + 4) % 4;
 
     if (cartaEspecial.tipo == "salta") {
@@ -276,7 +286,7 @@ jugar_turno_persona (void): Muestra cartas actuales del jugador y le permite jug
                             carta no corresponde a las reglas deberá jugar de nuevo, o robar una carta.
 
 Parámetros:
-    juego* estadoJuego: contiene mazo jugador, pila de descarte, turno actual.
+    juego* estadoJuego: contiene todo lo relacionado al juego.
 
 Retorno:
     Sin retorno.
@@ -321,7 +331,7 @@ void jugar_turno_persona(juego* estadoJuego) {
                     manejar_carta_negras(estadoJuego, 0, nuevaCarta); //juega especial negra
 
                 } else if (nuevaCarta.tipo == "salta" || nuevaCarta.tipo == "+2" || nuevaCarta.tipo == "cambio_sentido"){
-                    manejar_carta_especial(estadoJuego, nuevaCarta, 0); //juega especial
+                    manejar_carta_especial(estadoJuego, nuevaCarta); //juega especial
 
                 } else {
                     estadoJuego->pilaDescarte[estadoJuego->pila_size] = nuevaCarta;
@@ -362,7 +372,7 @@ void jugar_turno_persona(juego* estadoJuego) {
                     manejar_carta_negras(estadoJuego, 0, seleccionada);
 
                 } else if (seleccionada.tipo == "salta" || seleccionada.tipo == "+2" || seleccionada.tipo == "cambio_sentido") {
-                    manejar_carta_especial(estadoJuego, seleccionada, 0);
+                    manejar_carta_especial(estadoJuego, seleccionada);
 
                 } else {
                     estadoJuego->pilaDescarte[estadoJuego->pila_size] = seleccionada; //añade a la pila de descarte
@@ -409,8 +419,7 @@ jugar_turno_bot (void): Permite jugar turno del bot, determina si es necesario r
                         juega la primera carta jugable que tenga.
 
 Parámetros:
-    juego* estadoJuego: contiene mazo jugador, pila de descarte, turno actual.
-    int num_bot: numero del bot que está jugando.
+    juego* estadoJuego: contiene todo lo relacionado al juego.
 
 Retorno:
     Sin retorno.
@@ -455,7 +464,7 @@ void jugar_turno_bot(juego* estadoJuego) {
                 if (nuevaCarta.color == "Negro") {
                     manejar_carta_negras(estadoJuego, num_bot, nuevaCarta);  //juega la carta negra
                 } else if (nuevaCarta.tipo == "salta" || nuevaCarta.tipo == "+2" || nuevaCarta.tipo == "cambio_sentido") {
-                    manejar_carta_especial(estadoJuego, nuevaCarta, num_bot);  //juega la carta especial
+                    manejar_carta_especial(estadoJuego, nuevaCarta);  //juega la carta especial
                 } else {
                     estadoJuego->pilaDescarte[estadoJuego->pila_size] = nuevaCarta; //agregar la carta a la pila de descarte
                     estadoJuego->pila_size++; 
@@ -485,7 +494,7 @@ void jugar_turno_bot(juego* estadoJuego) {
         if (jugada.color == "Negro") {
             manejar_carta_negras(estadoJuego, num_bot, jugada);  //juega la carta negra
         } else if (jugada.tipo == "salta" || jugada.tipo == "+2" || jugada.tipo == "cambio_sentido") {
-            manejar_carta_especial(estadoJuego, jugada, num_bot);  //juega carta especial
+            manejar_carta_especial(estadoJuego, jugada);  //juega carta especial
         } else {
             estadoJuego->pilaDescarte[estadoJuego->pila_size] = jugada; //agregar la carta a la pila de descarte
             estadoJuego->pila_size++;
@@ -515,10 +524,11 @@ void jugar_turno_bot(juego* estadoJuego) {
 }
 
 /*
-revolver (void): Dado un mazo, cambia la posición de sus cartas.
+revolver (void): Dado un mazo, cambia la posición de sus cartas de forma aleatoria.
 
 Parámetros:
-    vector<carta>& mazo: lista de cartas.
+    carta mazo[]: lista de cartas del mazo.
+    int mazo_size: tamaño del mazo.
 
 Retorno:
     Sin retorno.
@@ -529,6 +539,15 @@ void revolver(carta mazo[], int mazo_size){
     shuffle(mazo, mazo + mazo_size, rng);
 }
 
+/*
+repartir_cartas (void): Reparte 7 cartas a cada jugador desde el mazo, y coloca la primera carta no especial en la pila de descarte
+
+Parámetros:
+    juego* estadoJuego: contiene todo lo relacionado al juego.
+
+Retorno:
+    Sin retorno.
+*/
 void repartir_cartas(juego* estadoJuego){
     //repartir cartas que son 7 para cada jugador
     for(int i = 0; i<4; ++i){
@@ -558,6 +577,7 @@ void repartir_cartas(juego* estadoJuego){
     }
 }
 
+
 int main(){
     int shmID = shmget(IPC_PRIVATE, sizeof(juego), IPC_CREAT | 0666); //para crear id de memoria compartida
     if(shmID == -1){
@@ -568,7 +588,7 @@ int main(){
     //leer y escribir en bloque de memoria, por lo que se adjunta el bloque de memoria del proceso
     juego *estadoJuego = (juego *)shmat(shmID, NULL, 0);
     if (estadoJuego == (void *)-1){
-        cerr << "Error al adjuntar la caga de memoria compartida";
+        cerr << "Error al adjuntar la memoria compartida";
         exit(1);
     }
 
@@ -593,7 +613,6 @@ int main(){
             while (!estadoJuego->juegoTerminado){
                 sem_wait(&estadoJuego->semaforo); //bloquea semaforo
                 
-                cout << getpid() << endl;
                 if(estadoJuego->turnoActual == i){
                     if(i==0){
                         jugar_turno_persona(estadoJuego);
@@ -613,6 +632,7 @@ int main(){
         }
     }
 
+    //padre espera que terminen los procesos
     for(int i = 0; i<4; ++i){
         wait(NULL);
     }
