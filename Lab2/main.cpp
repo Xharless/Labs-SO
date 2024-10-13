@@ -636,6 +636,7 @@ int main(){
         wait(NULL);
     }
 
+
     //libera la memoria compartida
     sem_destroy(&estadoJuego->semaforo); //borra semaforo
     shmdt(estadoJuego);
