@@ -16,7 +16,7 @@ struct carta {
 
 struct juego {
     carta mazo[108];
-    int mazo_size;
+    int mazo_size = 0;
     carta pilaDescarte[108];
     int pila_size;
     carta manos[4][7]; //4 jugadores
@@ -38,33 +38,55 @@ Parámetros:
 Retorno:
     Retorna el mazo creado.
 */
-void crear_mazo(juego* estadoJuego){
-    string colores[] = {"Amarillo","Verde","Rojo","Azul"};
+void crear_mazo(juego* estadoJuego) {
+    string colores[] = {"Amarillo", "Verde", "Rojo", "Azul"};
     string especiales[] = {"salta", "+2", "cambio_sentido"};
-    estadoJuego->mazo_size = 108;  
+    estadoJuego->mazo_size = 0;  
 
-    //crear cartas numericas
-    for(const string& color: colores){
-        estadoJuego->mazo[estadoJuego->mazo_size++] = {color, "0"};
+    // Crear cartas numéricas
+    for (const string& color : colores) {
+        carta nuevaCarta;
+        nuevaCarta.color = color;
+        nuevaCarta.tipo = "0";
+        estadoJuego->mazo[estadoJuego->mazo_size++] = nuevaCarta;
 
-        for(int i = 1; i<=9; i++){
-            estadoJuego->mazo[estadoJuego->mazo_size++] = {color, to_string(i)};
-            estadoJuego->mazo[estadoJuego->mazo_size++] = {color, to_string(i)};
+        for (int i = 1; i <= 9; i++) {
+            if (estadoJuego->mazo_size < 108) {
+                carta cartaNumerica;
+                cartaNumerica.color = color;
+                cartaNumerica.tipo = to_string(i);
+                estadoJuego->mazo[estadoJuego->mazo_size++] = cartaNumerica;
+                estadoJuego->mazo[estadoJuego->mazo_size++] = cartaNumerica;
+            }
         }
     }
 
-    //crear cartas especiales por cada color
-    for(const string& color:colores){
-        for(const string& especial: especiales){
-            estadoJuego->mazo[estadoJuego->mazo_size++] = {color, especial};
-            estadoJuego->mazo[estadoJuego->mazo_size++] = {color, especial};
+    // Crear cartas especiales por cada color
+    for (const string& color : colores) {
+        for (const string& especial : especiales) {
+            if (estadoJuego->mazo_size < 108) {
+                carta cartaEspecial;
+                cartaEspecial.color = color;
+                cartaEspecial.tipo = especial;
+                estadoJuego->mazo[estadoJuego->mazo_size++] = cartaEspecial;
+                estadoJuego->mazo[estadoJuego->mazo_size++] = cartaEspecial;
+            }
         }
     }
 
-    //crear cartas negras que son el comodin y el +4
-    for(int i = 0; i<4; i++){
-        estadoJuego->mazo[estadoJuego->mazo_size++] = {"Negro", "comodin"};
-        estadoJuego->mazo[estadoJuego->mazo_size++] = {"Negro", "+4"};
+    // Crear cartas negras que son el comodín y el +4
+    for (int i = 0; i < 4; i++) {
+        if (estadoJuego->mazo_size < 108) {
+            carta cartaComodin;
+            cartaComodin.color = "Negro";
+            cartaComodin.tipo = "comodin";
+            estadoJuego->mazo[estadoJuego->mazo_size++] = cartaComodin;
+
+            carta cartaPlus;
+            cartaPlus.color = "Negro";
+            cartaPlus.tipo = "+4";
+            estadoJuego->mazo[estadoJuego->mazo_size++] = cartaPlus;
+        }
     }
 }
 
