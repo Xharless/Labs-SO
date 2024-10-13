@@ -4,6 +4,7 @@
 #include <sys/shm.h> //para la memoria compartida 
 #include <semaphore.h> //para el uso de semaforos
 #include <algorithm>
+#include <random>
 #include <string>
 #include <ctime>
 #include <cstdlib>
@@ -88,20 +89,17 @@ void crear_mazo(juego* estadoJuego) {
     }
 }
 
-//si no salta entonces salta=0, si salta entonces salta=1
+
 void turno_siguiente(juego* estadoJuego, int salta){
+    //turno normal salta=1, carta especial salta=2
 
-    //en caso de que turno actual sea 0 y deba restarse entonces sumar 4
-    if(estadoJuego->turnoActual == 0 && estadoJuego->direccionTurno == -1){
-        estadoJuego->turnoActual = (estadoJuego->turnoActual + 4 - salta + estadoJuego->direccionTurno) % 4;
+    //direccion normal
+    if(estadoJuego->direccionTurno == 1){
+        estadoJuego->turnoActual = (estadoJuego->turnoActual + salta) % 4; //salto normal
 
-    } else if (estadoJuego->turnoActual != 0 && estadoJuego->direccionTurno == -1){
-        //se resta el salto si el turno es en reversa
-        estadoJuego->turnoActual = (estadoJuego->turnoActual - salta + estadoJuego->direccionTurno) % 4;
-
-    } else{
-        //si el turno no es en reversa entonces se suma el salto
-        estadoJuego->turnoActual = (estadoJuego->turnoActual + salta + estadoJuego->direccionTurno) % 4;
+    } else {
+        //direccion contraria
+        estadoJuego->turnoActual = (estadoJuego->turnoActual - salta + 4) % 4;
     }
 }
 
@@ -192,7 +190,6 @@ void manejar_carta_negras(juego* estadoJuego, int jugadorActual, carta jugada){
                 estadoJuego->mazo_size--;
                 estadoJuego->mano_size[siguienteJugador]++;
 
-                //estadoJuego->mazo.pop_back();
             } else {
                 cout << "El mazo está vacío" << endl;
                 cout << " " << endl;
@@ -202,12 +199,11 @@ void manejar_carta_negras(juego* estadoJuego, int jugadorActual, carta jugada){
 
         cout << "El jugador " << siguienteJugador + 1 << " pierde el turno." << endl;
         cout << " " << endl;
-        siguienteJugador = (siguienteJugador + estadoJuego->direccionTurno + 4) % 4;
-        turno_siguiente(estadoJuego,1); //salta el siguiente jugador
+        turno_siguiente(estadoJuego,2); //salta el siguiente jugador
 
     } else {
         //si es tipo comodin sigue el siguiente jugador
-        turno_siguiente(estadoJuego,0);
+        turno_siguiente(estadoJuego,1);
     }
 
     //da el color que se selecciono a la pila de descarte
@@ -232,25 +228,24 @@ Retorno:
     Sin retorno.
 */
 void manejar_carta_especial(juego* estadoJuego, carta cartaEspecial, int jugadorActual) {
-int siguienteJugador = (estadoJuego->turnoActual + estadoJuego->direccionTurno + 4) % 4;
+    int siguienteJugador = (estadoJuego->turnoActual + estadoJuego->direccionTurno + 4) % 4;
 
     if (cartaEspecial.tipo == "salta") {
         cout << "El jugador " << siguienteJugador + 1 << " ha sido saltado." << endl;
         cout << " " << endl;
-        turno_siguiente(estadoJuego, 1); // Salta el siguiente jugador
+        turno_siguiente(estadoJuego, 2); // Salta el siguiente jugador
 
     } else if (cartaEspecial.tipo == "+2") {
         cout << "El jugador " << siguienteJugador + 1 << " debe robar 2 cartas." << endl;
+        cout << "El jugador " << siguienteJugador + 1 << " pierde el turno." << endl;
         cout << " " << endl;
     
-        // Agregar dos cartas del mazo a la mano del jugador correspondiente
+        //agrega dos cartas del mazo a la mano del jugador correspondiente
         for (int i = 0; i < 2; i++) {
             if (estadoJuego->mazo_size > 0) {
-
                 estadoJuego->manos[siguienteJugador][estadoJuego->mano_size[siguienteJugador]] = estadoJuego->mazo[estadoJuego->mazo_size - 1];
                 estadoJuego->mazo_size--;
                 estadoJuego->mano_size[siguienteJugador]++;
-                //estadoJuego->mazo.pop_back();
 
             } else {
                 cout << "El mazo está vacío." << endl;
@@ -259,25 +254,22 @@ int siguienteJugador = (estadoJuego->turnoActual + estadoJuego->direccionTurno +
             }
         }
 
-        // Cambia el turno al siguiente jugador considerando el sentido
-        turno_siguiente(estadoJuego, 1); 
+        //turno del siguiente jugador considerando el sentido
+        turno_siguiente(estadoJuego, 2); 
 
     } else if (cartaEspecial.tipo == "cambio_sentido") {
         cout << "La dirección del juego ha cambiado." << endl;
         cout << " " << endl;
 
-        // Cambia la dirección del juego
+        //cambia dirección del juego
         estadoJuego->direccionTurno *= -1;  
-    
-        // Avanza al siguiente jugador en la nueva dirección
-        turno_siguiente(estadoJuego, 0);
+        turno_siguiente(estadoJuego, 1);
     }
 
-    // Añadir la carta a la pila de descarte
+    //agrega la carta a la pila de descarte
     estadoJuego->pilaDescarte[estadoJuego->pila_size] = cartaEspecial;
     estadoJuego->pila_size++;
 }
-
 
 /*
 jugar_turno_persona (void): Muestra cartas actuales del jugador y le permite jugar en su turno, si la
@@ -334,21 +326,22 @@ void jugar_turno_persona(juego* estadoJuego) {
                 } else {
                     estadoJuego->pilaDescarte[estadoJuego->pila_size] = nuevaCarta;
                     estadoJuego->pila_size++;
-                    turno_siguiente(estadoJuego,0);
+                    turno_siguiente(estadoJuego,1);
                 }
 
-                estadoJuego->mano_size[0]--; //elimina la carta robada
+                //elimina la última carta robada
+                estadoJuego->mano_size[0]--; 
 
             } else {
                 cout << "La carta que has robado no es jugable, pasas el turno\n";
                 cout << " " << endl;
-                turno_siguiente(estadoJuego,0);
+                turno_siguiente(estadoJuego,1);
             }
 
         } else {
             cout << "El mazo está vacío. No puedes robar más cartas\n";
             cout << " " << endl;
-            turno_siguiente(estadoJuego,0);
+            turno_siguiente(estadoJuego,1);
         }
 
     //si hay jugable
@@ -374,10 +367,13 @@ void jugar_turno_persona(juego* estadoJuego) {
                 } else {
                     estadoJuego->pilaDescarte[estadoJuego->pila_size] = seleccionada; //añade a la pila de descarte
                     estadoJuego->pila_size++;
-                    turno_siguiente(estadoJuego,0);
+                    turno_siguiente(estadoJuego,1);
                 }
 
-                estadoJuego->manos[0][eleccion - 1] = {"", ""}; //borra la carta de la mano
+                //eliminar la carta de la mano del jugador
+                for (int i = (eleccion-1); i < estadoJuego->mano_size[0] - 1; ++i) {
+                    estadoJuego->manos[0][i] = estadoJuego->manos[0][i + 1];
+                }
                 estadoJuego->mano_size[0]--;
 
             } else {
@@ -407,7 +403,6 @@ void jugar_turno_persona(juego* estadoJuego) {
         estadoJuego->juegoTerminado = true;
     }
 }
-
 
 /*
 jugar_turno_bot (void): Permite jugar turno del bot, determina si es necesario robar una carta o no y
@@ -449,12 +444,12 @@ void jugar_turno_bot(juego* estadoJuego) {
 
             estadoJuego->manos[num_bot][estadoJuego->mano_size[num_bot]] = nuevaCarta;
             estadoJuego->mano_size[num_bot]++;
-            cout << "JUgador " << num_bot + 1 << " ha robado una carta" << endl;
+            cout << "Jugador " << num_bot + 1 << " ha robado una carta" << endl;
 
             //ver si la carta robada es jugable
             if (es_jugable(cartaPila, nuevaCarta)) {
                 cout << "Jugador " << num_bot + 1 << " ha robado una carta jugable, se jugará automáticamente\n";
-                cout << "Jugador jugó " << nuevaCarta.color << " " << nuevaCarta.tipo << endl;
+                cout << "Jugó " << nuevaCarta.color << " " << nuevaCarta.tipo << endl;
                 cout << " " << endl;
 
                 if (nuevaCarta.color == "Negro") {
@@ -464,22 +459,22 @@ void jugar_turno_bot(juego* estadoJuego) {
                 } else {
                     estadoJuego->pilaDescarte[estadoJuego->pila_size] = nuevaCarta; //agregar la carta a la pila de descarte
                     estadoJuego->pila_size++; 
-                    turno_siguiente(estadoJuego,0);
+                    turno_siguiente(estadoJuego,1);
                 }
 
+                //eliminar la última carta de la mano del bot
                 estadoJuego->mano_size[num_bot]--; 
-                //estadoJuego->manos[num_bot].pop_back();  //eliminar la carta de la mano del bot
 
             } else {
                 cout << "Jugador " << num_bot + 1 << " ha robado una carta no jugable, pasa de turno\n";
                 cout << " " << endl;
-                turno_siguiente(estadoJuego,0);
+                turno_siguiente(estadoJuego,1);
             }
 
         } else {
             cout << "El mazo está vacío. Jugador " << num_bot + 1 << " no puede robar más cartas\n";
             cout << " " << endl;
-            turno_siguiente(estadoJuego,0);
+            turno_siguiente(estadoJuego,1);
         }
 
     //si hay jugable
@@ -494,10 +489,13 @@ void jugar_turno_bot(juego* estadoJuego) {
         } else {
             estadoJuego->pilaDescarte[estadoJuego->pila_size] = jugada; //agregar la carta a la pila de descarte
             estadoJuego->pila_size++;
-            turno_siguiente(estadoJuego,0);
+            turno_siguiente(estadoJuego,1);
         }
 
-        estadoJuego->manos[num_bot][posicion - 1] = {"", ""}; //eliminar la carta de la mano del bot
+        //eliminar la carta de la mano del bot
+        for (int i = posicion; i < estadoJuego->mano_size[num_bot] - 1; ++i) {
+            estadoJuego->manos[num_bot][i] = estadoJuego->manos[num_bot][i + 1];
+        }
         estadoJuego->mano_size[num_bot]--;
     }
 
@@ -526,8 +524,9 @@ Retorno:
     Sin retorno.
 */
 void revolver(carta mazo[], int mazo_size){
-    srand(time(0));
-    random_shuffle(mazo, mazo + mazo_size);
+    random_device random_generador;
+    mt19937 rng(random_generador());
+    shuffle(mazo, mazo + mazo_size, rng);
 }
 
 void repartir_cartas(juego* estadoJuego){
@@ -545,6 +544,7 @@ void repartir_cartas(juego* estadoJuego){
         if(estadoJuego->mazo[i].color != "Negro"){
             if(estadoJuego->mazo[i].tipo != "salta" && estadoJuego->mazo[i].tipo != "+2" && estadoJuego->mazo[i].tipo != "cambio_sentido"){
                 estadoJuego->pilaDescarte[0] = estadoJuego->mazo[i]; //se agrega a la pila de descarte
+                estadoJuego->pila_size = 1;
 
                 //borramos la carta agregada del mazo
                 for(int j = i; j < estadoJuego->mazo_size - 1; j++){
@@ -556,8 +556,6 @@ void repartir_cartas(juego* estadoJuego){
             }
         }
     }
-
-    estadoJuego->pila_size = 1;
 }
 
 int main(){
@@ -625,4 +623,3 @@ int main(){
 
     return 0;
 }
-
