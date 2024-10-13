@@ -19,7 +19,7 @@ struct juego {
     int mazo_size;
     carta pilaDescarte[108];
     int pila_size;
-    carta manos[4][7]; //4 jugadores
+    carta manos[4][60]; //4 jugadores
     int mano_size[4];
     int turnoActual;
     int direccionTurno; // 1 para adelante, -1 para atras
@@ -290,7 +290,7 @@ Retorno:
     Sin retorno.
 */
 void jugar_turno_persona(juego* estadoJuego) {
-    carta cartaPila = estadoJuego->pilaDescarte[estadoJuego->pila_size -1];
+    carta cartaPila = estadoJuego->pilaDescarte[estadoJuego->pila_size - 1];
     bool hay_jugable = false;
 
     cout << "Carta actual de la pila de descarte: " << cartaPila.color << " " << cartaPila.tipo << endl;
@@ -406,8 +406,6 @@ void jugar_turno_persona(juego* estadoJuego) {
 
         estadoJuego->juegoTerminado = true;
     }
-    
-    sem_post(&estadoJuego->semaforo); //libera semaforo
 }
 
 
@@ -424,7 +422,7 @@ Retorno:
 */
 void jugar_turno_bot(juego* estadoJuego) {
     int num_bot = estadoJuego->turnoActual;
-    carta cartaPila = estadoJuego->pilaDescarte[estadoJuego->pila_size -1];
+    carta cartaPila = estadoJuego->pilaDescarte[estadoJuego->pila_size - 1];
     carta jugada;
     bool hay_jugable = false;
     int posicion = 0;
@@ -516,8 +514,6 @@ void jugar_turno_bot(juego* estadoJuego) {
 
         estadoJuego->juegoTerminado = true;
     }
-
-    sem_post(&estadoJuego->semaforo); //libera semaforo
 }
 
 /*
@@ -578,6 +574,8 @@ int main(){
         exit(1);
     }
 
+    pid_t pid;
+
     //iniciar el juego 
     crear_mazo(estadoJuego);
     revolver(estadoJuego->mazo, estadoJuego->mazo_size);
@@ -590,9 +588,10 @@ int main(){
     
     //crear a los jugadores usando fork
     for(int i = 0; i<4; ++i){
-        pid_t pid = fork();
+        pid = fork();
 
         if(pid==0){
+
             while (!estadoJuego->juegoTerminado){
                 sem_wait(&estadoJuego->semaforo); //bloquea semaforo
                 
@@ -604,6 +603,7 @@ int main(){
                 }
 
                 sleep(1);
+                sem_post(&estadoJuego->semaforo); //libera semaforo
             }
             exit(0);
 
