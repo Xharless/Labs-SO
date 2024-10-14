@@ -434,10 +434,10 @@ void jugar_turno_bot(juego* estadoJuego) {
     cout << "Carta actual de la pila de descarte: " << cartaPila.color << " " << cartaPila.tipo << endl;
 
     //ver si el bot puede jugar una carta
-    for (const auto &cartaJugador : estadoJuego->manos[num_bot]) {
-        if (es_jugable(cartaPila, cartaJugador)) {
+    for (int i = 0; i < estadoJuego->mano_size[num_bot]; i++) {
+        if (es_jugable(cartaPila, estadoJuego->manos[num_bot][i])) {
             hay_jugable = true;
-            jugada = cartaJugador; //guardamos la carta jugable
+            jugada = estadoJuego->manos[num_bot][i]; //guardamos la carta jugable
             break;
         }
         posicion++;
