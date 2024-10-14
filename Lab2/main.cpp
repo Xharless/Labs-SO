@@ -613,16 +613,14 @@ int main(){
             while (!estadoJuego->juegoTerminado){
                 sem_wait(&estadoJuego->semaforo); //bloquea semaforo
                 
-                if(estadoJuego->turnoActual == i){
-                    if(i==0){
-                        jugar_turno_persona(estadoJuego);
-                    } else {
-                        jugar_turno_bot(estadoJuego);
-                    }
+                if(estadoJuego->turnoActual == 0){
+                    jugar_turno_persona(estadoJuego);
+                } else {
+                    jugar_turno_bot(estadoJuego);
                 }
 
-                sem_post(&estadoJuego->semaforo); //libera semaforo
                 sleep(1);
+                sem_post(&estadoJuego->semaforo); //libera semaforo
             }
             exit(0);
 
