@@ -130,10 +130,15 @@ public class pruebas {
                 System.out.println("Procesando archivo: " + filePath);
                 try {
                     char[][] matriz = leerMatrizDeArchivo(filePath);
+                    long inicio = System.nanoTime();
                     BuscarLetraPorCuadranteTask tarea = new BuscarLetraPorCuadranteTask(matriz, 0, matriz.length, 0, matriz[0].length);
                     Character letraEncontrada = pool.invoke(tarea);
-
+                    
+                    long fin = System.nanoTime();
+                    long duracion = fin - inicio;
+                    double duracionEnMilisegundos = duracion / 1_000_000.0;
                     System.out.println("Letra encontrada en " + filePath + ": " + letraEncontrada);
+                    System.out.printf("Tiempo de búsqueda: %.3f milisegundos\n", duracionEnMilisegundos);
                     System.out.println("---------Fin del archivo---------\n");
                 } catch (IOException e) {
                     System.err.println("Error al leer el archivo: " + filePath);
@@ -143,3 +148,4 @@ public class pruebas {
         }
     }
 }
+
