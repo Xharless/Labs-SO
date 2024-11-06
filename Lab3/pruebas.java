@@ -16,7 +16,7 @@ public class pruebas {
 
         private final char[][] matriz;
         private final int filaInicio, filaFin, colInicio, colFin;
-        private static final int UMBRAL = 2; // Umbral para búsqueda directa
+        private static final int UMBRAL = 4; // Umbral para búsqueda directa
 
         public BuscarLetraPorCuadranteTask(char[][] matriz, int filaInicio, int filaFin, int colInicio, int colFin) {
             this.matriz = matriz;
