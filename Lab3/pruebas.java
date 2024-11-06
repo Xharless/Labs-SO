@@ -12,9 +12,11 @@ import java.util.Arrays;
 public class pruebas {
     // Clase para dividir la búsqueda por cuadrantes
     static class BuscarLetraPorCuadranteTask extends RecursiveTask<Character> {
+        private static final long serialVersionUID = 1L;
+
         private final char[][] matriz;
         private final int filaInicio, filaFin, colInicio, colFin;
-        private static final int UMBRAL = 4; // Umbral para búsqueda directa
+        private static final int UMBRAL = 2; // Umbral para búsqueda directa
 
         public BuscarLetraPorCuadranteTask(char[][] matriz, int filaInicio, int filaFin, int colInicio, int colFin) {
             this.matriz = matriz;
@@ -125,26 +127,31 @@ public class pruebas {
         String[] files = getFiles(path);
         
         ForkJoinPool pool = new ForkJoinPool();
-        if (files != null) {
-            for (String filePath : files) {
-                System.out.println("Procesando archivo: " + filePath);
-                try {
-                    char[][] matriz = leerMatrizDeArchivo(filePath);
-                    long inicio = System.nanoTime();
-                    BuscarLetraPorCuadranteTask tarea = new BuscarLetraPorCuadranteTask(matriz, 0, matriz.length, 0, matriz[0].length);
-                    Character letraEncontrada = pool.invoke(tarea);
-                    
-                    long fin = System.nanoTime();
-                    long duracion = fin - inicio;
-                    double duracionEnMilisegundos = duracion / 1_000_000.0;
-                    System.out.println("Letra encontrada en " + filePath + ": " + letraEncontrada);
-                    System.out.printf("Tiempo de búsqueda: %.3f milisegundos\n", duracionEnMilisegundos);
-                    System.out.println("---------Fin del archivo---------\n");
-                } catch (IOException e) {
-                    System.err.println("Error al leer el archivo: " + filePath);
-                    e.printStackTrace();
+        try {
+            if (files != null) {
+                for (String filePath : files) {
+                    System.out.println("Procesando archivo: " + filePath);
+                    try {
+                        char[][] matriz = leerMatrizDeArchivo(filePath);
+                        long inicio = System.nanoTime();
+                        BuscarLetraPorCuadranteTask tarea = new BuscarLetraPorCuadranteTask(matriz, 0, matriz.length, 0, matriz[0].length);
+                        Character letraEncontrada = pool.invoke(tarea);
+                        
+                        long fin = System.nanoTime();
+                        long duracion = fin - inicio;
+                        double duracionEnMilisegundos = duracion / 1_000_000.0;
+                        System.out.println("Letra encontrada en " + filePath + ": " + letraEncontrada);
+                        System.out.printf("Tiempo de búsqueda: %.3f milisegundos\n", duracionEnMilisegundos);
+                        System.out.println("---------Fin del archivo---------\n");
+                    } catch (IOException e) {
+                        System.err.println("Error al leer el archivo: " + filePath);
+                        e.printStackTrace();
+                    }
                 }
             }
+
+        } finally {
+            pool.shutdown();
         }
     }
 }

@@ -10,8 +10,6 @@ import java.io.FileReader;
 import java.io.IOException; 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.RecursiveTask;
 
 //Ejemplo de hilos
 class MiHilo extends Thread {
@@ -34,6 +32,7 @@ class MiHilo extends Thread {
         System.out.println(nombre + " ha terminado su ejecución.");
     }
 }
+
 public class main {
     // funcion que lee todas las direcciones de la carpeta (en este caso es Caso1)
     public static String[] getFiles(String dir_path) throws FileNotFoundException, IOException{
