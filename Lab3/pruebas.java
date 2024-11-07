@@ -111,12 +111,15 @@ public class pruebas {
     // Función para leer el contenido de un archivo y convertirlo en una matriz de caracteres
     public static char[][] leerMatrizDeArchivo(String filePath) throws IOException {
         List<char[]> rows = new ArrayList<>();
+
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             String linea = br.readLine();  // Leer la primera línea para conocer el tamaño
             int size = Integer.parseInt(linea.split("x")[0].trim());
+
             while ((linea = br.readLine()) != null) {
                 rows.add(linea.replace(" ", "").toCharArray());
             }
+
             // Convertir la lista de filas a una matriz cuadrada
             return rows.toArray(new char[size][size]);
         }
@@ -127,10 +130,12 @@ public class pruebas {
         String[] files = getFiles(path);
         
         ForkJoinPool pool = new ForkJoinPool();
+
         try {
             if (files != null) {
                 for (String filePath : files) {
                     System.out.println("Procesando archivo: " + filePath);
+
                     try {
                         char[][] matriz = leerMatrizDeArchivo(filePath);
                         long inicio = System.nanoTime();
@@ -143,6 +148,7 @@ public class pruebas {
                         System.out.println("Letra encontrada en " + filePath + ": " + letraEncontrada);
                         System.out.printf("Tiempo de búsqueda: %.3f milisegundos\n", duracionEnMilisegundos);
                         System.out.println("---------Fin del archivo---------\n");
+                        
                     } catch (IOException e) {
                         System.err.println("Error al leer el archivo: " + filePath);
                         e.printStackTrace();
