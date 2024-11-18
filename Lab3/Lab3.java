@@ -186,7 +186,7 @@ public class Lab3 {
     }
 
     public static void main(String[] args) {
-        String path = "archivos_prueba/Caso2";
+        String path = "archivos_prueba/Caso2"; //cambiar por otro caso
         String[] files = getFiles(path);
         List<Character> clave = new ArrayList<>();
         

@@ -1,4 +1,5 @@
 import threading
+<<<<<<< HEAD
 import time
 import random
 
@@ -23,3 +24,7 @@ def crear_jugadores(num_jugadores):
         hebra.join()
 
 crear_jugadores(256)
+=======
+
+print("Hola Carlos")
+>>>>>>> 7d852b561e32618a13df31434eaeff9e13f196f5
