@@ -4,8 +4,21 @@ import time
 import random
 
 LOCK_REGISTRO = threading.Lock() #Para proteger el acceso al archivo
-REGISTRO = "Validacion.txt"
+REGISTRO_VALIDACION = "Validacion.txt"
+REGISTRO_FINAL = "Final.txt"
 
+# Configuración del torneo
+NUMERO_JUGADORES = 256
+CAPACIDAD_POR_GRUPO = 32
+DURACION_VALIDACION = 15  
+DURACION_ENFRENTAMIENTO = 10  
+
+
+def registrar_resultado(nombre_archivo, contenido):
+    with LOCK_REGISTRO:
+        with open(nombre_archivo, "a") as archivo:
+            archivo.write(contenido + "\n")
+        archivo.close()
 
 def validar_jugador(id_jugador,semaforo_zona):
     with semaforo_zona:
@@ -15,12 +28,11 @@ def validar_jugador(id_jugador,semaforo_zona):
         print(f"Jugador {id_jugador} inició validación a las {inicio}")
 
         #escribirlos en el registro
-        with LOCK_REGISTRO:
-            with open(REGISTRO, 'a') as archivo:
-                archivo.write(f"{id_jugador}, {inicio}, Validación completa\n")
-
+        resultado = "Validacion Completa"
+        registrar_resultado(REGISTRO_VALIDACION, f"{id_jugador}, {inicio}, {resultado}")
+        
         #simula validacion esperando 15 segundos
-        time.sleep(15)
+        time.sleep(DURACION_VALIDACION)
 
 
 def procesar_grupo(grupo, semaforo):
@@ -50,18 +62,73 @@ def asignar_grupo(capacidad_grupo, num_jugadores, semaforos_zona):
         hebra_zona.start()
 
 
+def enfrentar_jugadores(jugador1, jugador2):
+    print(f"Enfrentando a {jugador1} y {jugador2}...")
+    ganador = random.choice([jugador1, jugador2])
+    print(f"Ganador: {ganador}")
+    time.sleep(DURACION_ENFRENTAMIENTO)
+    return ganador
+
+
+def fase_eliminacion(jugadores, ronda):
+
+    archivo_ganadores = f'Ganadores_Ronda{ronda}.txt'
+    with open(archivo_ganadores, "w") as archivo:
+        archivo.write("Enfrentamiento -> Ganador\n")
+    
+    ganadores = []
+    for i in range(0, len(jugadores), 2):
+        ganador = enfrentar_jugadores(jugadores[i], jugadores[i+1])
+        ganadores.append(ganador)
+        registrar_resultado(archivo_ganadores, f"{jugadores[i]} vs {jugadores[i+1]} -> {ganador}")
+    
+    return ganadores
+
+
+def fase_repechaje(losers, ronda):
+
+    archivo_repechaje = f"Perdedores_Ronda{ronda}.txt"
+    with open(archivo_repechaje, "w") as archivo:
+        archivo.write("Enfrentamiento -> Ganador\n")
+
+    ganadores_repechaje = []    
+    for i in range(0, len(losers), 2):
+        ganador = enfrentar_jugadores(losers[i], losers[i + 1])
+        ganadores_repechaje.append(ganador)
+        registrar_resultado(archivo_repechaje, f"{losers[i]} vs {losers[i + 1]} -> {ganador}")
+    
+    return ganadores_repechaje
+
 #elimina si ya existe el archivo
-if REGISTRO in os.listdir("."):
-    os.remove(f"./{REGISTRO}")
+if REGISTRO_VALIDACION in os.listdir("."):
+    os.remove(f"./{REGISTRO_VALIDACION}")
 
 #escribe la primera linea
-with open(REGISTRO, 'w') as archivo:
-    archivo.write("ID_Jugador, Hora_Inicio, Hora_Fin, Resultado\n")
+with open(REGISTRO_VALIDACION, 'w') as archivo_validacion:
+    archivo_validacion.write("ID_Jugador, Hora_Inicio, Hora_Fin, Resultado\n")
 
-capacidad_por_grupo = 32
-numero_jugadores = 256
 #semaforos_zona permiten que entren dos grupos
-semaforos_zona = [threading.Semaphore(capacidad_por_grupo),threading.Semaphore(capacidad_por_grupo)]
+semaforos_zona = [threading.Semaphore(CAPACIDAD_POR_GRUPO),threading.Semaphore(CAPACIDAD_POR_GRUPO)]
 
-asignar_grupo(capacidad_por_grupo, numero_jugadores, semaforos_zona)
-archivo.close()
+#validacion inicial
+asignar_grupo(CAPACIDAD_POR_GRUPO, NUMERO_JUGADORES, semaforos_zona)
+jugadores_validos = [f"Jugador{i}" for i in range(1, NUMERO_JUGADORES + 1)]
+
+#fase de eliminacion directa
+ronda = 1
+ganadores_eliminacion = fase_eliminacion(jugadores_validos, ronda)
+
+#fase de repechaje
+losers = [jugador for jugador in jugadores_validos if jugador not in ganadores_eliminacion]
+ronda_repechaje = 1
+ganadores_repechaje = fase_repechaje(losers, ronda_repechaje)
+
+#final
+finalista_eliminacion = ganadores_eliminacion[0]
+finalista_repechaje = ganadores_repechaje[0]
+ganador_final = enfrentar_jugadores(finalista_eliminacion, finalista_repechaje)
+with open(REGISTRO_FINAL, "w") as archivo_final:
+        archivo_final.write("Enfrentamiento Final -> Ganador\n")
+        archivo_final.write(f"{finalista_eliminacion} vs {finalista_repechaje} -> {ganador_final}\n")
+
+archivo_final.close()
