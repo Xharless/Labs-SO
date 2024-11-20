@@ -1,49 +1,67 @@
+import os
 import threading
 import time
 import random
 
-capacidad_por_zona = 32 
-semaforo_zona = threading.Semaphore(capacidad_por_zona)
+LOCK_REGISTRO = threading.Lock() #Para proteger el acceso al archivo
+REGISTRO = "Validacion.txt"
 
 
-lock_registro = threading.Lock() #Para proteger el acceso al archivo
-registro = "Validacion.txt"
-
-
-def validar_jugador(id_jugador):
+def validar_jugador(id_jugador,semaforo_zona):
     with semaforo_zona:
-        inicio = time.strftime("%H:%M:%S") #hora inicio que lo piden en el archivo final
-        print(f"Jugador {id_jugador} iniciio validacion a las {inicio}")
-        time.sleep(random.randint(1,3))
 
-        resultado = "Validacion completa" if random.random() > 0.2 else "Validacion fallida"
-        fin = time.strftime("%H:%M:%S")
-        print(f"Jugador {id_jugador} termina validacion a las {fin} con resultado: {resultado}")
+        #hora inicio
+        inicio = time.strftime("%H:%M:%S")
+        print(f"Jugador {id_jugador} inició validación a las {inicio}")
 
         #escribirlos en el registro
-        with lock_registro:
-            with open(registro, 'a') as archivo:
-                archivo.write(f"{id_jugador}, {inicio}, {resultado}\n")
+        with LOCK_REGISTRO:
+            with open(REGISTRO, 'a') as archivo:
+                archivo.write(f"{id_jugador}, {inicio}, Validación completa\n")
+
+        #simula validacion esperando 15 segundos
+        time.sleep(15)
 
 
-
-# comportamiento de un jugador
-def jugador(id_jugador):
-    print(f"Jugador {id_jugador} entrando al torneo")
-    time.sleep(random.randint(1, 3)) # simular el tiempo de validacion
-    print(f"Jugador {id_jugador} completo la validacion")
-
-def crear_jugadores(num_jugadores):
+def procesar_grupo(grupo, semaforo):
     hebras = []
-    for i in range(num_jugadores):
-        #aqui crea una hebra por cada jugador
-        hebra = threading.Thread(target = jugador, args=(i,))
-        hebras.append(hebra)
-        hebra.start() #para iniciar la hebra
 
-        
-    # para ver que todas las hebras terminen antes de seguir
+    for id_jugador in grupo:
+        #una hebra por jugador
+        hebra = threading.Thread(target=validar_jugador, args=(id_jugador,semaforo))
+        hebras.append(hebra)
+        hebra.start()
+    
+    #espera a que todos los jugadores del grupo terminen
     for hebra in hebras:
         hebra.join()
 
-crear_jugadores(256)
+
+def asignar_grupo(capacidad_grupo, num_jugadores, semaforos_zona):
+
+    #crea los grupos
+    grupos = [list(range(i, i + capacidad_grupo)) for i in range(0, num_jugadores, capacidad_grupo)]
+
+    hebras_zonas = []
+    for i, grupo in enumerate(grupos):
+        semaforo = semaforos_zona[i%2] #elige semaforo por zona
+        hebra_zona = threading.Thread(target=procesar_grupo, args=(grupo, semaforo))
+        hebras_zonas.append(hebra_zona)
+        hebra_zona.start()
+
+
+#elimina si ya existe el archivo
+if REGISTRO in os.listdir("."):
+    os.remove(f"./{REGISTRO}")
+
+#escribe la primera linea
+with open(REGISTRO, 'w') as archivo:
+    archivo.write("ID_Jugador, Hora_Inicio, Hora_Fin, Resultado\n")
+
+capacidad_por_grupo = 32
+numero_jugadores = 256
+#semaforos_zona permiten que entren dos grupos
+semaforos_zona = [threading.Semaphore(capacidad_por_grupo),threading.Semaphore(capacidad_por_grupo)]
+
+asignar_grupo(capacidad_por_grupo, numero_jugadores, semaforos_zona)
+archivo.close()
