@@ -15,7 +15,7 @@ DURACION_VALIDACION = 15
 DURACION_ENFRENTAMIENTO = 10
 GANADOR = []
 REPECHAJE = []
-TERMINADO = False
+TERMINADO = True
 
 
 def registrar_resultado(nombre_archivo, contenido):
@@ -70,15 +70,13 @@ def enfrentar_jugadores(jugador1, jugador2):
 
 
 def fase_eliminacion_por_ronda(jugadores, ronda):
-    global REPECHAJE
-
     #inicializa archivo
     archivo_ganadores = f'Ganadores_Ronda{ronda}.txt'
     with open(archivo_ganadores, "w") as archivo:
         archivo.write("Enfrentamiento -> Ganador\n")
 
     ganadores = []
-    perdedores = []  #lista para los perdedores de esta ronda
+    perdedores = []
     for i in range(0, len(jugadores), 2):
         ganador = enfrentar_jugadores(jugadores[i], jugadores[i + 1])
         ganadores.append(ganador)
@@ -86,18 +84,11 @@ def fase_eliminacion_por_ronda(jugadores, ronda):
 
         registrar_resultado(archivo_ganadores, f"{jugadores[i]} vs {jugadores[i + 1]} -> {ganador}")
 
-    #se agregan a la ronda de repechaje
-    REPECHAJE += perdedores
-
     time.sleep(DURACION_ENFRENTAMIENTO)
-    if ronda == 1:
-        return ganadores, perdedores
-    return ganadores
+    return ganadores, perdedores
 
 
 def fase_repechaje_por_ronda(losers, ronda):
-    global REPECHAJE
-
     #inicializa archivo
     archivo_repechaje = f"Perdedores_Ronda{ronda}.txt"
     with open(archivo_repechaje, "w") as archivo:
@@ -114,15 +105,11 @@ def fase_repechaje_por_ronda(losers, ronda):
 
     #se eliminan los perdedores
     time.sleep(DURACION_ENFRENTAMIENTO)
-    if ronda != 1:     
-        REPECHAJE = [item for item in REPECHAJE if item not in perdedores]
-    else:
-        return ganadores
-
+    return ganadores
 
 
 def fase_eliminacion(ganadores_eliminacion):
-    global GANADOR, TERMINADO
+    global GANADOR, TERMINADO, REPECHAJE
 
     with CONDICION_FASE:
         ronda = 2
@@ -134,15 +121,16 @@ def fase_eliminacion(ganadores_eliminacion):
                 CONDICION_FASE.wait()
 
             #comienza la ronda
-            TERMINADO = False
+            TERMINADO = True
             print(f"Comienza la ronda {ronda} con {cant_jugadores} jugadores en eliminación")
-            ganadores = fase_eliminacion_por_ronda(ganadores_ronda_eliminacion, ronda)
+            ganadores, perdedores = fase_eliminacion_por_ronda(ganadores_ronda_eliminacion, ronda)
             ganadores_ronda_eliminacion = ganadores  #los que ganan van a la siguiente ronda
+            REPECHAJE += perdedores
 
             #terminamos la ronda
             ronda += 1
             cant_jugadores -= len(ganadores)
-            TERMINADO = True
+            TERMINADO = False
             CONDICION_FASE.notify_all()
 
         GANADOR = ganadores_ronda_eliminacion
@@ -150,7 +138,7 @@ def fase_eliminacion(ganadores_eliminacion):
 
 
 def fase_repechaje():
-    global REPECHAJE, TERMINADO
+    global REPECHAJE, TERMINADO, GANADOR
 
     with CONDICION_FASE:
         ronda_repechaje = 2
@@ -162,14 +150,20 @@ def fase_repechaje():
 
             #comienza la ronda
             TERMINADO = False
-            ganadores_ronda_repechaje = REPECHAJE
             print(f"Comienza la ronda {ronda_repechaje} de perdedores con {cant_jugadores} jugadores")
-            fase_repechaje_por_ronda(ganadores_ronda_repechaje, ronda_repechaje)
+            ganadores = fase_repechaje_por_ronda(REPECHAJE, ronda_repechaje)
+
+            REPECHAJE = ganadores
 
             #termina la ronda
             ronda_repechaje += 1
             cant_jugadores = len(REPECHAJE)
-            TERMINADO = True
+
+            #si existe ganador entonces debe seguir iterando
+            if GANADOR:
+                TERMINADO = False
+            else:
+                TERMINADO = True
             CONDICION_FASE.notify_all()
         print(f"Termina fase de repechaje con {ronda_repechaje-1} rondas")
 
@@ -211,8 +205,8 @@ for hebra in hebras_fases:
 
 
 #ronda final
-finalista_eliminacion = GANADOR
-finalista_repechaje = REPECHAJE
+finalista_eliminacion = GANADOR[0]
+finalista_repechaje = REPECHAJE[0]
 ganador_final = enfrentar_jugadores(finalista_eliminacion, finalista_repechaje)
 
 with open(REGISTRO_FINAL, "w") as archivo_final:
