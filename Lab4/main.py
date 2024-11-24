@@ -32,7 +32,7 @@ def validar_jugador(id_jugador, semaforo_zona):
 
         #escribirlos en el registro
         resultado = "Validacion Completa"
-        registrar_resultado(REGISTRO_VALIDACION, f"{id_jugador}, {inicio}, {resultado}")
+        registrar_resultado(REGISTRO_VALIDACION, f"Jugador {id_jugador}, {inicio}, {resultado}")
 
         #simula validacion esperando 15 segundos
         time.sleep(DURACION_VALIDACION)
@@ -78,11 +78,12 @@ def fase_eliminacion_por_ronda(jugadores, ronda):
     ganadores = []
     perdedores = []
     for i in range(0, len(jugadores), 2):
+        hora_enfrentamiento = time.strftime("%H:%M:%S")
         ganador = enfrentar_jugadores(jugadores[i], jugadores[i + 1])
         ganadores.append(ganador)
         perdedores.append(jugadores[i] if ganador != jugadores[i] else jugadores[i + 1])
 
-        registrar_resultado(archivo_ganadores, f"{jugadores[i]} vs {jugadores[i + 1]} -> {ganador}")
+        registrar_resultado(archivo_ganadores, f"{jugadores[i]} vs {jugadores[i + 1]}, {hora_enfrentamiento} -> {ganador}")
 
     time.sleep(DURACION_ENFRENTAMIENTO)
     return ganadores, perdedores
@@ -97,11 +98,12 @@ def fase_repechaje_por_ronda(losers, ronda):
     ganadores = []
     perdedores = []
     for i in range(0, len(losers), 2):
+        hora_enfrentamiento = time.strftime("%H:%M:%S")
         ganador = enfrentar_jugadores(losers[i], losers[i + 1])
         ganadores.append(ganador)
         perdedores.append(losers[i] if ganador != losers[i] else losers[i + 1])
 
-        registrar_resultado(archivo_repechaje, f"{losers[i]} vs {losers[i + 1]} -> {ganador}")
+        registrar_resultado(archivo_repechaje, f"{losers[i]} vs {losers[i + 1]}, {hora_enfrentamiento} -> {ganador}")
 
     #se eliminan los perdedores
     time.sleep(DURACION_ENFRENTAMIENTO)
@@ -176,7 +178,7 @@ if REGISTRO_FINAL in os.listdir("."):
 
 #escribe formato de validacion
 with open(REGISTRO_VALIDACION, 'w') as archivo_validacion:
-    archivo_validacion.write("ID_Jugador, Hora_Inicio, Resultado\n")
+    archivo_validacion.write("Jugador, Hora_Inicio, Resultado\n")
 
 #semaforos para dos grupos
 semaforos_zona = [threading.Semaphore(CAPACIDAD_POR_GRUPO), threading.Semaphore(CAPACIDAD_POR_GRUPO)]
@@ -207,8 +209,9 @@ for hebra in hebras_fases:
 #ronda final
 finalista_eliminacion = GANADOR[0]
 finalista_repechaje = REPECHAJE[0]
+hora_final = time.strftime("%H:%M:%S")
 ganador_final = enfrentar_jugadores(finalista_eliminacion, finalista_repechaje)
 
 with open(REGISTRO_FINAL, "w") as archivo_final:
     archivo_final.write("Enfrentamiento Final -> Ganador\n")
-    archivo_final.write(f"{finalista_eliminacion} vs {finalista_repechaje} -> {ganador_final}\n")
+    archivo_final.write(f"{finalista_eliminacion} vs {finalista_repechaje}, {hora_final} -> {ganador_final}\n")
