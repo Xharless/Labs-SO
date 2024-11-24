@@ -1,12 +1,3 @@
-Datos personales:
-	- Paralelo: 200.
-
-	- Nombre: Daniel Maturana
-    	- Rol: 202173575-5
-
-   	- Nombre: Carlos Arévalo
-	- Rol: 202173501-1
-
 Detalles de uso del programa:
 	- Nombre del archivo principal "main.py". Este debe encontrarse en la carpeta en la que desee que queden los archivos .txt.
 	- Para ejecutar, abrir una terminal en la carpeta del archivo principal y ejecutar "python3 main.py". Asegúrese tener la
